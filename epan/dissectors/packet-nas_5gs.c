@@ -611,7 +611,9 @@ de_nas_5gs_mm_5gs_mobile_id(tvbuff_t *tvb, proto_tree *tree, packet_info *pinfo,
     };
 
     static const int * flags_supi_fmt_tid[] = {
+        &hf_nas_5gs_spare_b7,
         &hf_nas_5gs_mm_supi_fmt,
+        &hf_nas_5gs_spare_b3,
         &hf_nas_5gs_mm_type_id,
         NULL
     };
@@ -633,7 +635,7 @@ de_nas_5gs_mm_5gs_mobile_id(tvbuff_t *tvb, proto_tree *tree, packet_info *pinfo,
             /* IMSI */
 
             /* MCC digit 2    MCC digit 1
-             * MNC digit 3     MCC digit 3
+             * MNC digit 3    MCC digit 3
              * MNC digit 2    MNC digit 1
              */
             offset = dissect_e212_mcc_mnc(tvb, pinfo, tree, offset, E212_NONE, TRUE);
@@ -649,10 +651,10 @@ de_nas_5gs_mm_5gs_mobile_id(tvbuff_t *tvb, proto_tree *tree, packet_info *pinfo,
             proto_tree_add_item(tree, hf_nas_5gs_mm_pki, tvb, offset, 1, ENC_BIG_ENDIAN);
             offset += 1;
             /* Scheme output octet 12-x */
-            proto_tree_add_item(tree, hf_nas_5gs_mm_scheme_output, tvb, offset, len - 8, ENC_BIG_ENDIAN);
+            proto_tree_add_item(tree, hf_nas_5gs_mm_scheme_output, tvb, offset, len - 8, ENC_NA);
         } else if (supi_fmt == 1) {
             /* NAI */
-            proto_tree_add_item(tree, hf_nas_5gs_mm_suci_nai, tvb, offset, len - 1, ENC_BIG_ENDIAN);
+            proto_tree_add_item(tree, hf_nas_5gs_mm_suci_nai, tvb, offset, len - 1, ENC_UTF_8 | ENC_NA);
         } else {
             proto_tree_add_expert(tree, pinfo, &ei_nas_5gs_unknown_value, tvb, offset, len - 1);
         }
@@ -662,7 +664,7 @@ de_nas_5gs_mm_5gs_mobile_id(tvbuff_t *tvb, proto_tree *tree, packet_info *pinfo,
         proto_tree_add_bitmask_list(tree, tvb, offset, 1, flags_odd_even_tid, ENC_BIG_ENDIAN);
         offset++;
         /* MCC digit 2    MCC digit 1
-         * MNC digit 3     MCC digit 3
+         * MNC digit 3    MCC digit 3
          * MNC digit 2    MNC digit 1
          */
         offset = dissect_e212_mcc_mnc(tvb, pinfo, tree, offset, E212_NONE, TRUE);
