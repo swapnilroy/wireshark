@@ -4653,7 +4653,7 @@ static const per_sequence_t HandoverCommand_sequence[] = {
 static int
 dissect_nr_rrc_HandoverCommand(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_nr_rrc_HandoverCommand, HandoverCommand_sequence);
 
@@ -5115,7 +5115,7 @@ dissect_nr_rrc_SEQUENCE_SIZE_1_maxPLMN_OF_PLMN_Identity(tvbuff_t *tvb _U_, int o
 static int
 dissect_nr_rrc_TrackingAreaCode(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     24, 24, FALSE, NULL, NULL);
+                                     24, 24, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -5135,7 +5135,7 @@ dissect_nr_rrc_RAN_AreaCode(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx 
 static int
 dissect_nr_rrc_CellIdentity(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     36, 36, FALSE, NULL, NULL);
+                                     36, 36, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -5382,7 +5382,7 @@ dissect_nr_rrc_RRM_Config(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U
 static int
 dissect_nr_rrc_ShortMAC_I(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     16, 16, FALSE, NULL, NULL);
+                                     16, 16, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -5392,7 +5392,7 @@ dissect_nr_rrc_ShortMAC_I(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_256(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     256, 256, FALSE, NULL, NULL);
+                                     256, 256, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -5590,7 +5590,7 @@ static const per_sequence_t ConfigRestrictInfoSCG_sequence[] = {
 static int
 dissect_nr_rrc_ConfigRestrictInfoSCG(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_nr_rrc_ConfigRestrictInfoSCG, ConfigRestrictInfoSCG_sequence);
 
@@ -5864,7 +5864,7 @@ static const per_sequence_t HandoverPreparationInformation_sequence[] = {
 static int
 dissect_nr_rrc_HandoverPreparationInformation(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_nr_rrc_HandoverPreparationInformation, HandoverPreparationInformation_sequence);
 
@@ -5901,7 +5901,7 @@ static const per_sequence_t BandCombinationInfoSN_sequence[] = {
 static int
 dissect_nr_rrc_BandCombinationInfoSN(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_nr_rrc_BandCombinationInfoSN, BandCombinationInfoSN_sequence);
 
@@ -7410,7 +7410,7 @@ dissect_nr_rrc_SSB_MTC(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, 
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_1_80(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     1, 80, FALSE, NULL, NULL);
+                                     1, 80, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -7462,7 +7462,7 @@ dissect_nr_rrc_T_frequencyAndTiming(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_4(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     4, 4, FALSE, NULL, NULL);
+                                     4, 4, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -7472,7 +7472,7 @@ dissect_nr_rrc_BIT_STRING_SIZE_4(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_8(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     8, 8, FALSE, NULL, NULL);
+                                     8, 8, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -7482,7 +7482,7 @@ dissect_nr_rrc_BIT_STRING_SIZE_8(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_64(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     64, 64, FALSE, NULL, NULL);
+                                     64, 64, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -7652,7 +7652,7 @@ static const per_sequence_t MeasurementTimingConfiguration_sequence[] = {
 static int
 dissect_nr_rrc_MeasurementTimingConfiguration(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_nr_rrc_MeasurementTimingConfiguration, MeasurementTimingConfiguration_sequence);
 
@@ -7779,7 +7779,7 @@ static const per_sequence_t UERadioPagingInformation_sequence[] = {
 static int
 dissect_nr_rrc_UERadioPagingInformation(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_nr_rrc_UERadioPagingInformation, UERadioPagingInformation_sequence);
 
@@ -7902,7 +7902,7 @@ static const per_sequence_t UERadioAccessCapabilityInformation_sequence[] = {
 static int
 dissect_nr_rrc_UERadioAccessCapabilityInformation(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_nr_rrc_UERadioAccessCapabilityInformation, UERadioAccessCapabilityInformation_sequence);
 
@@ -7914,7 +7914,7 @@ dissect_nr_rrc_UERadioAccessCapabilityInformation(tvbuff_t *tvb _U_, int offset 
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_6(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     6, 6, FALSE, NULL, NULL);
+                                     6, 6, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -7988,7 +7988,7 @@ dissect_nr_rrc_T_intraFreqReselection(tvbuff_t *tvb _U_, int offset _U_, asn1_ct
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_1(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     1, 1, FALSE, NULL, NULL);
+                                     1, 1, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -8009,7 +8009,7 @@ static const per_sequence_t MIB_sequence[] = {
 static int
 dissect_nr_rrc_MIB(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   col_append_sep_str(actx->pinfo->cinfo, COL_INFO, NULL, "MIB");
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
@@ -8608,7 +8608,7 @@ static const per_sequence_t SIB2_sequence[] = {
 static int
 dissect_nr_rrc_SIB2(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   col_append_str(actx->pinfo->cinfo, COL_INFO, " SIB2");
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
@@ -8739,7 +8739,7 @@ static const per_sequence_t SIB3_sequence[] = {
 static int
 dissect_nr_rrc_SIB3(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   col_append_str(actx->pinfo->cinfo, COL_INFO, " SIB3");
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
@@ -8870,7 +8870,7 @@ static const per_sequence_t SIB4_sequence[] = {
 static int
 dissect_nr_rrc_SIB4(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   col_append_str(actx->pinfo->cinfo, COL_INFO, " SIB4");
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
@@ -9231,7 +9231,7 @@ static const per_sequence_t SIB5_sequence[] = {
 static int
 dissect_nr_rrc_SIB5(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   col_append_str(actx->pinfo->cinfo, COL_INFO, " SIB5");
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
@@ -9246,7 +9246,7 @@ static int
 dissect_nr_rrc_T_messageIdentifier(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   tvbuff_t *msg_id_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, -1,
-                                     16, 16, FALSE, &msg_id_tvb, NULL);
+                                     16, 16, FALSE, NULL, 0, &msg_id_tvb, NULL);
 
 
 
@@ -9263,7 +9263,7 @@ static int
 dissect_nr_rrc_T_serialNumber(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   tvbuff_t *serial_nb_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     16, 16, FALSE, &serial_nb_tvb, NULL);
+                                     16, 16, FALSE, NULL, 0, &serial_nb_tvb, NULL);
 
 
 
@@ -9311,7 +9311,7 @@ static const per_sequence_t SIB6_sequence[] = {
 static int
 dissect_nr_rrc_SIB6(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   col_append_str(actx->pinfo->cinfo, COL_INFO, " SIB6");
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
@@ -9326,7 +9326,7 @@ static int
 dissect_nr_rrc_T_messageIdentifier_01(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   tvbuff_t *msg_id_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, -1,
-                                     16, 16, FALSE, &msg_id_tvb, NULL);
+                                     16, 16, FALSE, NULL, 0, &msg_id_tvb, NULL);
 
 
 
@@ -9345,7 +9345,7 @@ static int
 dissect_nr_rrc_T_serialNumber_01(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   tvbuff_t *serial_nb_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     16, 16, FALSE, &serial_nb_tvb, NULL);
+                                     16, 16, FALSE, NULL, 0, &serial_nb_tvb, NULL);
 
 
 
@@ -9468,7 +9468,7 @@ static const per_sequence_t SIB7_sequence[] = {
 static int
 dissect_nr_rrc_SIB7(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   col_append_str(actx->pinfo->cinfo, COL_INFO, " SIB7");
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
@@ -9483,7 +9483,7 @@ static int
 dissect_nr_rrc_T_messageIdentifier_02(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   tvbuff_t *msg_id_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, -1,
-                                     16, 16, FALSE, &msg_id_tvb, NULL);
+                                     16, 16, FALSE, NULL, 0, &msg_id_tvb, NULL);
 
 
 
@@ -9502,7 +9502,7 @@ static int
 dissect_nr_rrc_T_serialNumber_02(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   tvbuff_t *serial_nb_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     16, 16, FALSE, &serial_nb_tvb, NULL);
+                                     16, 16, FALSE, NULL, 0, &serial_nb_tvb, NULL);
 
 
 
@@ -9626,7 +9626,7 @@ static const per_sequence_t SIB8_sequence[] = {
 static int
 dissect_nr_rrc_SIB8(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   col_append_str(actx->pinfo->cinfo, COL_INFO, " SIB8");
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
@@ -9663,7 +9663,7 @@ static int
 dissect_nr_rrc_T_dayLightSavingTime(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   tvbuff_t *daylight_saving_time_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, -1,
-                                     2, 2, FALSE, &daylight_saving_time_tvb, NULL);
+                                     2, 2, FALSE, NULL, 0, &daylight_saving_time_tvb, NULL);
 
 
 
@@ -9722,7 +9722,7 @@ static const per_sequence_t SIB9_sequence[] = {
 static int
 dissect_nr_rrc_SIB9(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   col_append_str(actx->pinfo->cinfo, COL_INFO, " SIB9");
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
@@ -10364,7 +10364,7 @@ dissect_nr_rrc_SI_RequestConfig(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *a
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_24(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     24, 24, FALSE, NULL, NULL);
+                                     24, 24, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -10533,7 +10533,7 @@ dissect_nr_rrc_ControlResourceSetId(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_45(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     45, 45, FALSE, NULL, NULL);
+                                     45, 45, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -10800,7 +10800,7 @@ dissect_nr_rrc_INTEGER_2_2559(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *act
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_14(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     14, 14, FALSE, NULL, NULL);
+                                     14, 14, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -13159,7 +13159,7 @@ dissect_nr_rrc_T_uac_BarringTime(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_7(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     7, 7, FALSE, NULL, NULL);
+                                     7, 7, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -13312,7 +13312,7 @@ static const per_sequence_t SIB1_sequence[] = {
 static int
 dissect_nr_rrc_SIB1(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   col_append_sep_str(actx->pinfo->cinfo, COL_INFO, NULL, "SIB1");
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
@@ -14365,7 +14365,7 @@ static const per_sequence_t RadioBearerConfig_sequence[] = {
 static int
 dissect_nr_rrc_RadioBearerConfig(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_nr_rrc_RadioBearerConfig, RadioBearerConfig_sequence);
 
@@ -14780,7 +14780,7 @@ dissect_nr_rrc_T_associatedSSB(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *ac
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_12(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     12, 12, FALSE, NULL, NULL);
+                                     12, 12, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -16378,7 +16378,7 @@ static const per_sequence_t MeasGapConfig_sequence[] = {
 static int
 dissect_nr_rrc_MeasGapConfig(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_nr_rrc_MeasGapConfig, MeasGapConfig_sequence);
 
@@ -16516,7 +16516,7 @@ static const per_sequence_t MeasConfig_sequence[] = {
 static int
 dissect_nr_rrc_MeasConfig(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_nr_rrc_MeasConfig, MeasConfig_sequence);
 
@@ -16908,7 +16908,7 @@ static const per_sequence_t RRCReconfiguration_sequence[] = {
 static int
 dissect_nr_rrc_RRCReconfiguration(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   col_append_sep_str(actx->pinfo->cinfo, COL_INFO, NULL, "RRC Reconfiguration");
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
@@ -17198,7 +17198,7 @@ dissect_nr_rrc_CellReselectionPriorities(tvbuff_t *tvb _U_, int offset _U_, asn1
 static int
 dissect_nr_rrc_I_RNTI_Value(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     40, 40, FALSE, NULL, NULL);
+                                     40, 40, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -17208,7 +17208,7 @@ dissect_nr_rrc_I_RNTI_Value(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx 
 static int
 dissect_nr_rrc_ShortI_RNTI_Value(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     24, 24, FALSE, NULL, NULL);
+                                     24, 24, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -18169,7 +18169,7 @@ dissect_nr_rrc_DL_DCCH_Message(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *ac
 static int
 dissect_nr_rrc_NG_5G_S_TMSI(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     48, 48, FALSE, NULL, NULL);
+                                     48, 48, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -18355,7 +18355,7 @@ dissect_nr_rrc_PCCH_Message(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx 
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_39(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     39, 39, FALSE, NULL, NULL);
+                                     39, 39, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -18449,7 +18449,7 @@ dissect_nr_rrc_RRCSetupRequest(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *ac
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_16(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     16, 16, FALSE, NULL, NULL);
+                                     16, 16, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -18598,7 +18598,7 @@ dissect_nr_rrc_RRCReestablishmentRequest(tvbuff_t *tvb _U_, int offset _U_, asn1
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_maxSI_Message(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     maxSI_Message, maxSI_Message, FALSE, NULL, NULL);
+                                     maxSI_Message, maxSI_Message, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -18937,7 +18937,7 @@ dissect_nr_rrc_PLMN_IdentityList_EUTRA_EPC(tvbuff_t *tvb _U_, int offset _U_, as
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_28(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     28, 28, FALSE, NULL, NULL);
+                                     28, 28, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -19344,7 +19344,7 @@ static const per_sequence_t UplinkTxDirectCurrentList_sequence_of[1] = {
 static int
 dissect_nr_rrc_UplinkTxDirectCurrentList(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   offset = dissect_per_constrained_sequence_of(tvb, offset, actx, tree, hf_index,
                                                   ett_nr_rrc_UplinkTxDirectCurrentList, UplinkTxDirectCurrentList_sequence_of,
                                                   1, maxNrofServingCells, FALSE);
@@ -19440,7 +19440,7 @@ static const per_sequence_t RRCReconfigurationComplete_sequence[] = {
 static int
 dissect_nr_rrc_RRCReconfigurationComplete(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   col_append_sep_str(actx->pinfo->cinfo, COL_INFO, NULL, "RRC Reconfiguration Complete");
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
@@ -19454,7 +19454,7 @@ dissect_nr_rrc_RRCReconfigurationComplete(tvbuff_t *tvb _U_, int offset _U_, asn
 static int
 dissect_nr_rrc_AMF_Identifier(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     24, 24, FALSE, NULL, NULL);
+                                     24, 24, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -19495,7 +19495,7 @@ dissect_nr_rrc_T_guami_Type(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx 
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_32(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     32, 32, FALSE, NULL, NULL);
+                                     32, 32, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -19541,7 +19541,7 @@ dissect_nr_rrc_SEQUENCE_SIZE_1_maxNrofS_NSSAI_OF_S_NSSAI(tvbuff_t *tvb _U_, int 
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_9(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     9, 9, FALSE, NULL, NULL);
+                                     9, 9, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -22037,7 +22037,7 @@ dissect_nr_rrc_RateMatchPatternId(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t 
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_275(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     275, 275, FALSE, NULL, NULL);
+                                     275, 275, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -22069,7 +22069,7 @@ dissect_nr_rrc_T_symbolsInResourceBlock(tvbuff_t *tvb _U_, int offset _U_, asn1_
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_2(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     2, 2, FALSE, NULL, NULL);
+                                     2, 2, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -22079,7 +22079,7 @@ dissect_nr_rrc_BIT_STRING_SIZE_2(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_5(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     5, 5, FALSE, NULL, NULL);
+                                     5, 5, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -22089,7 +22089,7 @@ dissect_nr_rrc_BIT_STRING_SIZE_5(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_10(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     10, 10, FALSE, NULL, NULL);
+                                     10, 10, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -22099,7 +22099,7 @@ dissect_nr_rrc_BIT_STRING_SIZE_10(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t 
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_20(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     20, 20, FALSE, NULL, NULL);
+                                     20, 20, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -22109,7 +22109,7 @@ dissect_nr_rrc_BIT_STRING_SIZE_20(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t 
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_40(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     40, 40, FALSE, NULL, NULL);
+                                     40, 40, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -22445,7 +22445,7 @@ dissect_nr_rrc_ZP_CSI_RS_ResourceId(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_3(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     3, 3, FALSE, NULL, NULL);
+                                     3, 3, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -25416,7 +25416,7 @@ dissect_nr_rrc_T_periodicity(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_18(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     18, 18, FALSE, NULL, NULL);
+                                     18, 18, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -30640,7 +30640,7 @@ dissect_nr_rrc_T_pmi_FormatIndicator(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_11(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     11, 11, FALSE, NULL, NULL);
+                                     11, 11, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -30650,7 +30650,7 @@ dissect_nr_rrc_BIT_STRING_SIZE_11(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t 
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_13(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     13, 13, FALSE, NULL, NULL);
+                                     13, 13, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -30660,7 +30660,7 @@ dissect_nr_rrc_BIT_STRING_SIZE_13(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t 
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_15(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     15, 15, FALSE, NULL, NULL);
+                                     15, 15, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -30670,7 +30670,7 @@ dissect_nr_rrc_BIT_STRING_SIZE_15(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t 
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_17(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     17, 17, FALSE, NULL, NULL);
+                                     17, 17, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -30680,7 +30680,7 @@ dissect_nr_rrc_BIT_STRING_SIZE_17(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t 
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_19(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     19, 19, FALSE, NULL, NULL);
+                                     19, 19, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -30806,7 +30806,7 @@ dissect_nr_rrc_T_two(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, pr
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_96(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     96, 96, FALSE, NULL, NULL);
+                                     96, 96, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -30816,7 +30816,7 @@ dissect_nr_rrc_BIT_STRING_SIZE_96(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t 
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_128(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     128, 128, FALSE, NULL, NULL);
+                                     128, 128, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -30826,7 +30826,7 @@ dissect_nr_rrc_BIT_STRING_SIZE_128(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_192(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     192, 192, FALSE, NULL, NULL);
+                                     192, 192, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -30836,7 +30836,7 @@ dissect_nr_rrc_BIT_STRING_SIZE_192(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_48(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     48, 48, FALSE, NULL, NULL);
+                                     48, 48, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -31028,7 +31028,7 @@ dissect_nr_rrc_T_type1_01(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_43(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     43, 43, FALSE, NULL, NULL);
+                                     43, 43, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -31038,7 +31038,7 @@ dissect_nr_rrc_BIT_STRING_SIZE_43(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t 
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_59(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     59, 59, FALSE, NULL, NULL);
+                                     59, 59, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -31048,7 +31048,7 @@ dissect_nr_rrc_BIT_STRING_SIZE_59(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t 
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_75(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     75, 75, FALSE, NULL, NULL);
+                                     75, 75, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -31058,7 +31058,7 @@ dissect_nr_rrc_BIT_STRING_SIZE_75(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t 
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_107(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     107, 107, FALSE, NULL, NULL);
+                                     107, 107, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -31068,7 +31068,7 @@ dissect_nr_rrc_BIT_STRING_SIZE_107(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_139(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     139, 139, FALSE, NULL, NULL);
+                                     139, 139, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -32357,7 +32357,7 @@ static const per_sequence_t CellGroupConfig_sequence[] = {
 static int
 dissect_nr_rrc_CellGroupConfig(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_nr_rrc_CellGroupConfig, CellGroupConfig_sequence);
 
@@ -32566,7 +32566,7 @@ dissect_nr_rrc_T_simultaneousRx_Tx(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_1_8(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     1, 8, FALSE, NULL, NULL);
+                                     1, 8, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -32606,7 +32606,7 @@ dissect_nr_rrc_T_ue_CA_PowerClass_N(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_1_32(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     1, 32, FALSE, NULL, NULL);
+                                     1, 32, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -35835,7 +35835,7 @@ static const per_sequence_t FreqBandList_sequence_of[1] = {
 static int
 dissect_nr_rrc_FreqBandList(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   offset = dissect_per_constrained_sequence_of(tvb, offset, actx, tree, hf_index,
                                                   ett_nr_rrc_FreqBandList, FreqBandList_sequence_of,
                                                   1, maxBandsMRDC, FALSE);
@@ -36286,7 +36286,7 @@ dissect_nr_rrc_MAC_Parameters(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *act
 static int
 dissect_nr_rrc_BIT_STRING_SIZE_22(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     22, 22, FALSE, NULL, NULL);
+                                     22, 22, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -41093,7 +41093,7 @@ dissect_nr_rrc_UE_NR_Capability(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *a
 
 int dissect_nr_rrc_HandoverCommand_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41103,7 +41103,7 @@ int dissect_nr_rrc_HandoverCommand_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_
 }
 int dissect_nr_rrc_HandoverPreparationInformation_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41113,7 +41113,7 @@ int dissect_nr_rrc_HandoverPreparationInformation_PDU(tvbuff_t *tvb _U_, packet_
 }
 int dissect_nr_rrc_CG_Config_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41123,7 +41123,7 @@ int dissect_nr_rrc_CG_Config_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, prot
 }
 int dissect_nr_rrc_BandCombinationInfoSN_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41133,7 +41133,7 @@ int dissect_nr_rrc_BandCombinationInfoSN_PDU(tvbuff_t *tvb _U_, packet_info *pin
 }
 int dissect_nr_rrc_CG_ConfigInfo_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41143,7 +41143,7 @@ int dissect_nr_rrc_CG_ConfigInfo_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, 
 }
 int dissect_nr_rrc_ConfigRestrictInfoSCG_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41153,7 +41153,7 @@ int dissect_nr_rrc_ConfigRestrictInfoSCG_PDU(tvbuff_t *tvb _U_, packet_info *pin
 }
 int dissect_nr_rrc_MeasurementTimingConfiguration_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41163,7 +41163,7 @@ int dissect_nr_rrc_MeasurementTimingConfiguration_PDU(tvbuff_t *tvb _U_, packet_
 }
 static int dissect_UERadioPagingInformation_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41173,7 +41173,7 @@ static int dissect_UERadioPagingInformation_PDU(tvbuff_t *tvb _U_, packet_info *
 }
 static int dissect_UERadioAccessCapabilityInformation_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41183,7 +41183,7 @@ static int dissect_UERadioAccessCapabilityInformation_PDU(tvbuff_t *tvb _U_, pac
 }
 static int dissect_BCCH_BCH_Message_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41193,7 +41193,7 @@ static int dissect_BCCH_BCH_Message_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U
 }
 static int dissect_BCCH_DL_SCH_Message_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41203,7 +41203,7 @@ static int dissect_BCCH_DL_SCH_Message_PDU(tvbuff_t *tvb _U_, packet_info *pinfo
 }
 static int dissect_DL_CCCH_Message_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41213,7 +41213,7 @@ static int dissect_DL_CCCH_Message_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_
 }
 static int dissect_DL_DCCH_Message_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41223,7 +41223,7 @@ static int dissect_DL_DCCH_Message_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_
 }
 static int dissect_PCCH_Message_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41233,7 +41233,7 @@ static int dissect_PCCH_Message_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, p
 }
 static int dissect_UL_CCCH_Message_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41243,7 +41243,7 @@ static int dissect_UL_CCCH_Message_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_
 }
 static int dissect_UL_CCCH1_Message_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41253,7 +41253,7 @@ static int dissect_UL_CCCH1_Message_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U
 }
 int dissect_nr_rrc_UL_DCCH_Message_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41263,7 +41263,7 @@ int dissect_nr_rrc_UL_DCCH_Message_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_
 }
 int dissect_nr_rrc_MIB_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41273,7 +41273,7 @@ int dissect_nr_rrc_MIB_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree
 }
 int dissect_nr_rrc_RRCReconfiguration_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41283,7 +41283,7 @@ int dissect_nr_rrc_RRCReconfiguration_PDU(tvbuff_t *tvb _U_, packet_info *pinfo 
 }
 int dissect_nr_rrc_RRCReconfigurationComplete_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41293,7 +41293,7 @@ int dissect_nr_rrc_RRCReconfigurationComplete_PDU(tvbuff_t *tvb _U_, packet_info
 }
 int dissect_nr_rrc_SIB1_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41303,7 +41303,7 @@ int dissect_nr_rrc_SIB1_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tre
 }
 int dissect_nr_rrc_SIB2_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41313,7 +41313,7 @@ int dissect_nr_rrc_SIB2_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tre
 }
 int dissect_nr_rrc_SIB3_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41323,7 +41323,7 @@ int dissect_nr_rrc_SIB3_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tre
 }
 int dissect_nr_rrc_SIB4_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41333,7 +41333,7 @@ int dissect_nr_rrc_SIB4_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tre
 }
 int dissect_nr_rrc_SIB5_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41343,7 +41343,7 @@ int dissect_nr_rrc_SIB5_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tre
 }
 int dissect_nr_rrc_SIB6_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41353,7 +41353,7 @@ int dissect_nr_rrc_SIB6_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tre
 }
 int dissect_nr_rrc_SIB7_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41363,7 +41363,7 @@ int dissect_nr_rrc_SIB7_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tre
 }
 int dissect_nr_rrc_SIB8_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41373,7 +41373,7 @@ int dissect_nr_rrc_SIB8_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tre
 }
 int dissect_nr_rrc_SIB9_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41383,7 +41383,7 @@ int dissect_nr_rrc_SIB9_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tre
 }
 int dissect_nr_rrc_CellGroupConfig_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41393,7 +41393,7 @@ int dissect_nr_rrc_CellGroupConfig_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_
 }
 int dissect_nr_rrc_MeasConfig_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41403,7 +41403,7 @@ int dissect_nr_rrc_MeasConfig_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, pro
 }
 int dissect_nr_rrc_MeasGapConfig_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41413,7 +41413,7 @@ int dissect_nr_rrc_MeasGapConfig_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, 
 }
 int dissect_nr_rrc_MeasResultSCG_Failure_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41423,7 +41423,7 @@ int dissect_nr_rrc_MeasResultSCG_Failure_PDU(tvbuff_t *tvb _U_, packet_info *pin
 }
 int dissect_nr_rrc_P_Max_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41433,7 +41433,7 @@ int dissect_nr_rrc_P_Max_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tr
 }
 int dissect_nr_rrc_RadioBearerConfig_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41443,7 +41443,7 @@ int dissect_nr_rrc_RadioBearerConfig_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _
 }
 int dissect_nr_rrc_UplinkTxDirectCurrentList_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41453,7 +41453,7 @@ int dissect_nr_rrc_UplinkTxDirectCurrentList_PDU(tvbuff_t *tvb _U_, packet_info 
 }
 int dissect_nr_rrc_FreqBandList_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41463,7 +41463,7 @@ int dissect_nr_rrc_FreqBandList_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, p
 }
 int dissect_nr_rrc_UE_CapabilityRAT_ContainerList_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41473,7 +41473,7 @@ int dissect_nr_rrc_UE_CapabilityRAT_ContainerList_PDU(tvbuff_t *tvb _U_, packet_
 }
 static int dissect_UE_CapabilityRequestFilterNR_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41483,7 +41483,7 @@ static int dissect_UE_CapabilityRequestFilterNR_PDU(tvbuff_t *tvb _U_, packet_in
 }
 int dissect_nr_rrc_UE_MRDC_Capability_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41493,7 +41493,7 @@ int dissect_nr_rrc_UE_MRDC_Capability_PDU(tvbuff_t *tvb _U_, packet_info *pinfo 
 }
 int dissect_nr_rrc_UE_NR_Capability_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41503,7 +41503,7 @@ int dissect_nr_rrc_UE_NR_Capability_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U
 }
 static int dissect_MeasResultList2NR_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);
@@ -41513,7 +41513,7 @@ static int dissect_MeasResultList2NR_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _
 }
 static int dissect_SystemInformation_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U_, proto_tree *tree _U_, void *data _U_) {
   proto_item *prot_ti = proto_tree_add_item(tree, proto_nr_rrc, tvb, 0, -1, ENC_NA);
-  PROTO_ITEM_SET_HIDDEN(prot_ti);
+  proto_item_set_hidden(prot_ti);
   int offset = 0;
   asn1_ctx_t asn1_ctx;
   asn1_ctx_init(&asn1_ctx, ASN1_ENC_PER, FALSE, pinfo);

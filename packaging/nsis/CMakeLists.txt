@@ -46,9 +46,9 @@ endif()
 set (MMDBRESOLVE_EXE ${MAXMINDDB_FOUND})
 
 # Must match ${EXTRA_INSTALLER_DIR}/Npcap-X.Y.Z.exe
-set(NPCAP_PACKAGE_VERSION "0.991")
+set(NPCAP_PACKAGE_VERSION "0.992")
 
-set(USBPCAP_PACKAGE_VERSION "1.2.0.4")
+set(USBPCAP_PACKAGE_VERSION "1.3.0.0")
 
 set(PRODUCT_VERSION ${PROJECT_MAJOR_VERSION}.${PROJECT_MINOR_VERSION}.${PROJECT_PATCH_VERSION}.${PROJECT_BUILD_VERSION})
 
@@ -206,6 +206,7 @@ macro( ADD_NSIS_PACKAGE_TARGET )
 			COMMAND ${POWERSHELL_COMMAND} "${_nsis_source_dir}/windeployqt-to-nsis.ps1"
 				-Executable $<TARGET_FILE:wireshark>
 				-FilePath ${_nsis_binary_dir}/qt-dll-manifest.nsh
+				$<$<CONFIG:Debug>:-DebugConfig>
 		)
 
 		# Build NSIS package dependencies. We build the package in

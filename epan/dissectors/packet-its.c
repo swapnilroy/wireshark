@@ -18,15 +18,16 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
+
 /*
  * Implemented:
- * CA (CAM)                           ETSI EN 302 637-2
- * DEN (DENM)                         ETSI EN 302 637-3
- * RLT (MAPEM)                        ETSI TS 103 301
- * TLM (SPATEM)                       ETSI TS 103 301
- * IVI (IVIM)                         ETSI TS 103 301
- * TLC (SREM)                         ETSI TS 103 301
- * TLC (SSEM)                         ETSI TS 103 301
+ * CA (CAM)                           ETSI EN 302 637-2   V1.4.1 (2019-01)
+ * DEN (DENM)                         ETSI EN 302 637-3   V1.3.0 (2018-08)
+ * RLT (MAPEM)                        ETSI TS 103 301     V1.2.1 (2018-08)
+ * TLM (SPATEM)                       ETSI TS 103 301     V1.2.1 (2018-08)
+ * IVI (IVIM)                         ETSI TS 103 301     V1.2.1 (2018-08)
+ * TLC (SREM)                         ETSI TS 103 301     V1.2.1 (2018-08)
+ * TLC (SSEM)                         ETSI TS 103 301     V1.2.1 (2018-08)
  * EVCSN POI (EVCSN POI message)      ETSI TS 101 556-1
  * TPG (TRM, TCM, VDRM, VDPM, EOFM)   ETSI TS 101 556-2
  * Charging (EV-RSR, SRM, SCM)        ETSI TS 101 556-3
@@ -65,14 +66,14 @@
  * BTP port   Facilities service      Related standard
  * number     or Application
  * values
- * 2001       CA (CAM)                ETSI EN 302 637-2
+ * 2001       CA (CAM)                ETSI EN 302 637-2  V1.4.1 (2019-01)
  * 2002       DEN (DENM)              ETSI EN 302 637-3
- * 2003       RLT (MAPEM)             ETSI TS 103 301
- * 2004       TLM (SPATEM)            ETSI TS 103 301
+ * 2003       RLT (MAPEM)             ETSI TS 103 301     V1.2.1 (2018-08)
+ * 2004       TLM (SPATEM)            ETSI TS 103 301     V1.2.1 (2018-08)
  * 2005       SA (SAEM)               ETSI TS 102 890-1
- * 2006       IVI (IVIM)              ETSI TS 103 301
- * 2007       TLC (SREM)              ETSI TS 103 301
- * 2008       TLC (SSEM)              ETSI TS 103 301
+ * 2006       IVI (IVIM)              ETSI TS 103 301     V1.2.1 (2018-08)
+ * 2007       TLC (SREM)              ETSI TS 103 301     V1.2.1 (2018-08)
+ * 2008       TLC (SSEM)              ETSI TS 103 301     V1.2.1 (2018-08)
  * 2009       Allocated               Allocated for "Intelligent Transport
  *                                    System (ITS); Vehicular Communications;
  *                                    Basic Set of Applications; Specification
@@ -83,7 +84,7 @@
  *            VDPM, EOFM)
  * 2012       Charging (EV-RSR,       ETSI TS 101 556-3
  *            SRM, SCM)
- * 2013       GPC (RTCMEM)            ETSI TS 103 301
+ * 2013       GPC (RTCMEM)            ETSI TS 103 301     V1.2.1 (2018-08)
  * 2014       CTL (CTLM)              ETSI TS 102 941
  * 2015       CRL (CRLM)              ETSI TS 102 941
  * 2016       Certificate request     ETSI TS 102 941
@@ -112,6 +113,8 @@
  */
 void proto_reg_handoff_its(void);
 void proto_register_its(void);
+
+static expert_field ei_its_no_sub_dis = EI_INIT;
 
 // TAP
 static int its_tap = -1;
@@ -1334,8 +1337,16 @@ static int hf_evcsn_ChargingSpotType_standardChargeMode1 = -1;
 static int hf_evcsn_ChargingSpotType_standardChargeMode2 = -1;
 static int hf_evcsn_ChargingSpotType_standardOrFastChargeMode3 = -1;
 static int hf_evcsn_ChargingSpotType_fastChargeWithExternalCharger = -1;
+static int hf_evcsn_ChargingSpotType_spare_bit4 = -1;
+static int hf_evcsn_ChargingSpotType_spare_bit5 = -1;
+static int hf_evcsn_ChargingSpotType_spare_bit6 = -1;
+static int hf_evcsn_ChargingSpotType_spare_bit7 = -1;
 static int hf_evcsn_ChargingSpotType_quickDrop = -1;
+static int hf_evcsn_ChargingSpotType_spare_bit9 = -1;
+static int hf_evcsn_ChargingSpotType_spare_bit10 = -1;
+static int hf_evcsn_ChargingSpotType_spare_bit11 = -1;
 static int hf_evcsn_ChargingSpotType_inductiveChargeWhileStationary = -1;
+static int hf_evcsn_ChargingSpotType_spare_bit13 = -1;
 static int hf_evcsn_ChargingSpotType_inductiveChargeWhileDriving = -1;
 
 /* --- Module EV-RechargingSpotReservation-PDU-Descriptions --- --- ---       */
@@ -1385,7 +1396,7 @@ static int hf_evrsr_SupportedPaymentTypes_contract = -1;
 static int hf_evrsr_SupportedPaymentTypes_externalIdentification = -1;
 
 /*--- End of included file: packet-its-hf.c ---*/
-#line 271 "./asn1/its/packet-its-template.c"
+#line 274 "./asn1/its/packet-its-template.c"
 
 // CauseCode/SubCauseCode management
 static int hf_its_trafficConditionSubCauseCode = -1;
@@ -1725,6 +1736,9 @@ static gint ett_AddGrpC_ItsStationPosition = -1;
 /* --- Module SSEM-PDU-Descriptions --- --- ---                               */
 
 
+/* --- Module RTCMEM-PDU-Descriptions --- --- ---                             */
+
+
 /* --- Module CAM-PDU-Descriptions --- --- ---                                */
 
 static gint ett_cam_CoopAwareness = -1;
@@ -1827,7 +1841,7 @@ static gint ett_evrsr_RechargingType = -1;
 static gint ett_evrsr_SupportedPaymentTypes = -1;
 
 /*--- End of included file: packet-its-ett.c ---*/
-#line 301 "./asn1/its/packet-its-template.c"
+#line 304 "./asn1/its/packet-its-template.c"
 
 // Deal with cause/subcause code management
 struct { CauseCodeType_enum cause; int* hf; } cause_to_subcause[] = {
@@ -1932,7 +1946,7 @@ static const per_sequence_t its_ItsPduHeader_sequence[] = {
 
 static int
 dissect_its_ItsPduHeader(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 584 "./asn1/its/its.cnf"
+#line 585 "./asn1/its/its.cnf"
   guint8 version = tvb_get_guint8(tvb, 0);
   if ((offset = dissector_try_uint(its_version_subdissector_table, version, tvb, actx->pinfo, tree))) {
     return offset;
@@ -1946,6 +1960,7 @@ dissect_its_ItsPduHeader(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_
   tap_queue_packet(its_tap, actx->pinfo, actx->private_data);
   tvbuff_t *next_tvb = tvb_new_subset_length(tvb, (offset+7)>>3, -1);
   if (!dissector_try_uint(its_msgid_subdissector_table, (hdr->version << 16)+hdr->msgId, next_tvb, actx->pinfo, tree)) {
+    proto_tree_add_expert(tree, actx->pinfo, &ei_its_no_sub_dis, next_tvb, 0,  - 1);
     call_data_dissector(next_tvb, actx->pinfo, tree);
   }
 
@@ -2258,30 +2273,21 @@ dissect_its_PtActivation(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_
 }
 
 
+static const int * its_AccelerationControl_bits[] = {
+  &hf_its_AccelerationControl_brakePedalEngaged,
+  &hf_its_AccelerationControl_gasPedalEngaged,
+  &hf_its_AccelerationControl_emergencyBrakeEngaged,
+  &hf_its_AccelerationControl_collisionWarningEngaged,
+  &hf_its_AccelerationControl_accEngaged,
+  &hf_its_AccelerationControl_cruiseControlEngaged,
+  &hf_its_AccelerationControl_speedLimiterEngaged,
+  NULL
+};
 
 static int
 dissect_its_AccelerationControl(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 681 "./asn1/its/its.cnf"
-  tvbuff_t *parameter_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     7, 7, FALSE, &parameter_tvb, NULL);
-
-  if (parameter_tvb) {
-    const gint *fields[] = { // CHECKED
-      &hf_its_AccelerationControl_brakePedalEngaged,
-      &hf_its_AccelerationControl_gasPedalEngaged,
-      &hf_its_AccelerationControl_emergencyBrakeEngaged,
-      &hf_its_AccelerationControl_collisionWarningEngaged,
-      &hf_its_AccelerationControl_accEngaged,
-      &hf_its_AccelerationControl_cruiseControlEngaged,
-      &hf_its_AccelerationControl_speedLimiterEngaged,
-      NULL
-    };
-    proto_tree *subtree = proto_item_add_subtree(actx->created_item, ett_its_AccelerationControl);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 0, 1, fields, ENC_BIG_ENDIAN);
-  }
-
-
+                                     7, 7, FALSE, its_AccelerationControl_bits, 7, NULL, NULL);
 
   return offset;
 }
@@ -2331,7 +2337,7 @@ dissect_its_CauseCodeType(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U
 
 static int
 dissect_its_SubCauseCodeType(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 1180 "./asn1/its/its.cnf"
+#line 686 "./asn1/its/its.cnf"
   // Overwrite hf_index
   hf_index = *find_subcause_from_cause((CauseCodeType_enum) ((its_private_data_t*)actx->private_data)->cause_code);
   offset = dissect_per_constrained_integer(tvb, offset, actx, tree, hf_index,
@@ -2786,7 +2792,7 @@ dissect_its_HardShoulderStatus(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *ac
 static int
 dissect_its_DrivingLaneStatus(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     1, 13, FALSE, NULL, NULL);
+                                     1, 13, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -3057,31 +3063,22 @@ dissect_its_StationType(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_,
 }
 
 
+static const int * its_ExteriorLights_bits[] = {
+  &hf_its_ExteriorLights_lowBeamHeadlightsOn,
+  &hf_its_ExteriorLights_highBeamHeadlightsOn,
+  &hf_its_ExteriorLights_leftTurnSignalOn,
+  &hf_its_ExteriorLights_rightTurnSignalOn,
+  &hf_its_ExteriorLights_daytimeRunningLightsOn,
+  &hf_its_ExteriorLights_reverseLightOn,
+  &hf_its_ExteriorLights_fogLightOn,
+  &hf_its_ExteriorLights_parkingLightsOn,
+  NULL
+};
 
 static int
 dissect_its_ExteriorLights(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 966 "./asn1/its/its.cnf"
-  tvbuff_t *parameter_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     8, 8, FALSE, &parameter_tvb, NULL);
-
-  if (parameter_tvb) {
-    const gint *fields[] = { // CHECKED
-      &hf_its_ExteriorLights_lowBeamHeadlightsOn,
-      &hf_its_ExteriorLights_highBeamHeadlightsOn,
-      &hf_its_ExteriorLights_leftTurnSignalOn,
-      &hf_its_ExteriorLights_rightTurnSignalOn,
-      &hf_its_ExteriorLights_daytimeRunningLightsOn,
-      &hf_its_ExteriorLights_reverseLightOn,
-      &hf_its_ExteriorLights_fogLightOn,
-      &hf_its_ExteriorLights_parkingLightsOn,
-      NULL
-    };
-    proto_tree *subtree = proto_item_add_subtree(actx->created_item, ett_its_ExteriorLights);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 0, 1, fields, ENC_BIG_ENDIAN);
-  }
-
-
+                                     8, 8, FALSE, its_ExteriorLights_bits, 8, NULL, NULL);
 
   return offset;
 }
@@ -3191,51 +3188,33 @@ dissect_its_DangerousGoodsExtended(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t
 }
 
 
+static const int * its_SpecialTransportType_bits[] = {
+  &hf_its_SpecialTransportType_heavyLoad,
+  &hf_its_SpecialTransportType_excessWidth,
+  &hf_its_SpecialTransportType_excessLength,
+  &hf_its_SpecialTransportType_excessHeight,
+  NULL
+};
 
 static int
 dissect_its_SpecialTransportType(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 1098 "./asn1/its/its.cnf"
-  tvbuff_t *parameter_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     4, 4, FALSE, &parameter_tvb, NULL);
-
-  if (parameter_tvb) {
-    const gint *fields[] = { // CHECKED
-      &hf_its_SpecialTransportType_heavyLoad,
-      &hf_its_SpecialTransportType_excessWidth,
-      &hf_its_SpecialTransportType_excessLength,
-      &hf_its_SpecialTransportType_excessHeight,
-      NULL
-    };
-    proto_tree *subtree = proto_item_add_subtree(actx->created_item, ett_its_SpecialTransportType);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 0, 1, fields, ENC_BIG_ENDIAN);
-  }
-
-
+                                     4, 4, FALSE, its_SpecialTransportType_bits, 4, NULL, NULL);
 
   return offset;
 }
 
 
+static const int * its_LightBarSirenInUse_bits[] = {
+  &hf_its_LightBarSirenInUse_lightBarActivated,
+  &hf_its_LightBarSirenInUse_sirenActivated,
+  NULL
+};
 
 static int
 dissect_its_LightBarSirenInUse(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 758 "./asn1/its/its.cnf"
-  tvbuff_t *parameter_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     2, 2, FALSE, &parameter_tvb, NULL);
-
-  if (parameter_tvb) {
-    const gint *fields[] = { // CHECKED
-      &hf_its_LightBarSirenInUse_lightBarActivated,
-      &hf_its_LightBarSirenInUse_sirenActivated,
-      NULL
-    };
-    proto_tree *subtree = proto_item_add_subtree(actx->created_item, ett_its_LightBarSirenInUse);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 0, 1, fields, ENC_BIG_ENDIAN);
-  }
-
-
+                                     2, 2, FALSE, its_LightBarSirenInUse_bits, 2, NULL, NULL);
 
   return offset;
 }
@@ -3437,51 +3416,34 @@ dissect_its_PosFrontAx(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, 
 }
 
 
+static const int * its_PositionOfOccupants_bits[] = {
+  &hf_its_PositionOfOccupants_row1LeftOccupied,
+  &hf_its_PositionOfOccupants_row1RightOccupied,
+  &hf_its_PositionOfOccupants_row1MidOccupied,
+  &hf_its_PositionOfOccupants_row1NotDetectable,
+  &hf_its_PositionOfOccupants_row1NotPresent,
+  &hf_its_PositionOfOccupants_row2LeftOccupied,
+  &hf_its_PositionOfOccupants_row2RightOccupied,
+  &hf_its_PositionOfOccupants_row2MidOccupied,
+  &hf_its_PositionOfOccupants_row2NotDetectable,
+  &hf_its_PositionOfOccupants_row2NotPresent,
+  &hf_its_PositionOfOccupants_row3LeftOccupied,
+  &hf_its_PositionOfOccupants_row3RightOccupied,
+  &hf_its_PositionOfOccupants_row3MidOccupied,
+  &hf_its_PositionOfOccupants_row3NotDetectable,
+  &hf_its_PositionOfOccupants_row3NotPresent,
+  &hf_its_PositionOfOccupants_row4LeftOccupied,
+  &hf_its_PositionOfOccupants_row4RightOccupied,
+  &hf_its_PositionOfOccupants_row4MidOccupied,
+  &hf_its_PositionOfOccupants_row4NotDetectable,
+  &hf_its_PositionOfOccupants_row4NotPresent,
+  NULL
+};
 
 static int
 dissect_its_PositionOfOccupants(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 1059 "./asn1/its/its.cnf"
-  tvbuff_t *parameter_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     20, 20, FALSE, &parameter_tvb, NULL);
-
-  if (parameter_tvb) {
-    const gint *fields0[] = { // CHECKED
-      &hf_its_PositionOfOccupants_row1LeftOccupied,
-      &hf_its_PositionOfOccupants_row1RightOccupied,
-      &hf_its_PositionOfOccupants_row1MidOccupied,
-      &hf_its_PositionOfOccupants_row1NotDetectable,
-      &hf_its_PositionOfOccupants_row1NotPresent,
-      &hf_its_PositionOfOccupants_row2LeftOccupied,
-      &hf_its_PositionOfOccupants_row2RightOccupied,
-      &hf_its_PositionOfOccupants_row2MidOccupied,
-      NULL
-    };
-    const gint *fields1[] = { // CHECKED
-      &hf_its_PositionOfOccupants_row2NotDetectable,
-      &hf_its_PositionOfOccupants_row2NotPresent,
-      &hf_its_PositionOfOccupants_row3LeftOccupied,
-      &hf_its_PositionOfOccupants_row3RightOccupied,
-      &hf_its_PositionOfOccupants_row3MidOccupied,
-      &hf_its_PositionOfOccupants_row3NotDetectable,
-      &hf_its_PositionOfOccupants_row3NotPresent,
-      &hf_its_PositionOfOccupants_row4LeftOccupied,
-      NULL
-    };
-    const gint *fields2[] = { // CHECKED
-      &hf_its_PositionOfOccupants_row4RightOccupied,
-      &hf_its_PositionOfOccupants_row4MidOccupied,
-      &hf_its_PositionOfOccupants_row4NotDetectable,
-      &hf_its_PositionOfOccupants_row4NotPresent,
-      NULL
-    };
-    proto_tree *subtree = proto_item_add_subtree(actx->created_item, ett_its_PositionOfOccupants);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 0, 1, fields0, ENC_BIG_ENDIAN);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 1, 1, fields1, ENC_BIG_ENDIAN);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 2, 1, fields2, ENC_BIG_ENDIAN);
-  }
-
-
+                                     20, 20, FALSE, its_PositionOfOccupants_bits, 20, NULL, NULL);
 
   return offset;
 }
@@ -3542,30 +3504,21 @@ dissect_its_VehicleIdentification(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t 
 }
 
 
+static const int * its_EnergyStorageType_bits[] = {
+  &hf_its_EnergyStorageType_hydrogenStorage,
+  &hf_its_EnergyStorageType_electricEnergyStorage,
+  &hf_its_EnergyStorageType_liquidPropaneGas,
+  &hf_its_EnergyStorageType_compressedNaturalGas,
+  &hf_its_EnergyStorageType_diesel,
+  &hf_its_EnergyStorageType_gasoline,
+  &hf_its_EnergyStorageType_ammonia,
+  NULL
+};
 
 static int
 dissect_its_EnergyStorageType(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 806 "./asn1/its/its.cnf"
-  tvbuff_t *parameter_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     7, 7, FALSE, &parameter_tvb, NULL);
-
-  if (parameter_tvb) {
-    const gint *fields[] = { // CHECKED
-      &hf_its_EnergyStorageType_hydrogenStorage,
-      &hf_its_EnergyStorageType_electricEnergyStorage,
-      &hf_its_EnergyStorageType_liquidPropaneGas,
-      &hf_its_EnergyStorageType_compressedNaturalGas,
-      &hf_its_EnergyStorageType_diesel,
-      &hf_its_EnergyStorageType_gasoline,
-      &hf_its_EnergyStorageType_ammonia,
-      NULL
-    };
-    proto_tree *subtree = proto_item_add_subtree(actx->created_item, ett_its_EnergyStorageType);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 0, 1, fields, ENC_BIG_ENDIAN);
-  }
-
-
+                                     7, 7, FALSE, its_EnergyStorageType_bits, 7, NULL, NULL);
 
   return offset;
 }
@@ -3653,25 +3606,16 @@ dissect_its_PathHistory(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_,
 }
 
 
+static const int * its_EmergencyPriority_bits[] = {
+  &hf_its_EmergencyPriority_requestForRightOfWay,
+  &hf_its_EmergencyPriority_requestForFreeCrossingAtATrafficLight,
+  NULL
+};
 
 static int
 dissect_its_EmergencyPriority(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 824 "./asn1/its/its.cnf"
-  tvbuff_t *parameter_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     2, 2, FALSE, &parameter_tvb, NULL);
-
-  if (parameter_tvb) {
-    const gint *fields[] = { // CHECKED
-      &hf_its_EmergencyPriority_requestForRightOfWay,
-      &hf_its_EmergencyPriority_requestForFreeCrossingAtATrafficLight,
-      NULL
-    };
-    proto_tree *subtree = proto_item_add_subtree(actx->created_item, ett_its_EmergencyPriority);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 0, 1, fields, ENC_BIG_ENDIAN);
-  }
-
-
+                                     2, 2, FALSE, its_EmergencyPriority_bits, 2, NULL, NULL);
 
   return offset;
 }
@@ -4198,7 +4142,7 @@ static int dissect_its_ItsPduHeader_PDU(tvbuff_t *tvb _U_, packet_info *pinfo _U
 static int
 dissect_anads_CountryCode(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     10, 10, FALSE, NULL, NULL);
+                                     10, 10, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -5729,27 +5673,18 @@ dissect_ivi_T_month_day(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_,
 }
 
 
+static const int * ivi_PMD_bits[] = {
+  &hf_ivi_PMD_national_holiday,
+  &hf_ivi_PMD_even_days,
+  &hf_ivi_PMD_odd_days,
+  &hf_ivi_PMD_market_day,
+  NULL
+};
 
 static int
 dissect_ivi_PMD(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 651 "./asn1/its/its.cnf"
-  tvbuff_t *parameter_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     4, 4, FALSE, &parameter_tvb, NULL);
-
-  if (parameter_tvb) {
-    const gint *fields[] = {
-      &hf_ivi_PMD_national_holiday,
-      &hf_ivi_PMD_even_days,
-      &hf_ivi_PMD_odd_days,
-      &hf_ivi_PMD_market_day,
-      NULL
-    };
-    proto_tree *subtree = proto_item_add_subtree(actx->created_item, ett_ivi_PMD);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 0, 2, fields, ENC_BIG_ENDIAN);
-  }
-
-
+                                     4, 4, FALSE, ivi_PMD_bits, 4, NULL, NULL);
 
   return offset;
 }
@@ -5805,31 +5740,22 @@ dissect_ivi_T_hourMinutes(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U
 }
 
 
+static const int * ivi_DayOfWeek_bits[] = {
+  &hf_ivi_DayOfWeek_unused,
+  &hf_ivi_DayOfWeek_monday,
+  &hf_ivi_DayOfWeek_tuesday,
+  &hf_ivi_DayOfWeek_wednesday,
+  &hf_ivi_DayOfWeek_thursday,
+  &hf_ivi_DayOfWeek_friday,
+  &hf_ivi_DayOfWeek_saturday,
+  &hf_ivi_DayOfWeek_sunday,
+  NULL
+};
 
 static int
 dissect_ivi_DayOfWeek(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 787 "./asn1/its/its.cnf"
-  tvbuff_t *parameter_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     8, 8, FALSE, &parameter_tvb, NULL);
-
-  if (parameter_tvb) {
-    const gint *fields[] = { // CHECKED
-      &hf_ivi_DayOfWeek_unused,
-      &hf_ivi_DayOfWeek_monday,
-      &hf_ivi_DayOfWeek_tuesday,
-      &hf_ivi_DayOfWeek_wednesday,
-      &hf_ivi_DayOfWeek_thursday,
-      &hf_ivi_DayOfWeek_friday,
-      &hf_ivi_DayOfWeek_saturday,
-      &hf_ivi_DayOfWeek_sunday,
-      NULL
-    };
-    proto_tree *subtree = proto_item_add_subtree(actx->created_item, ett_ivi_DayOfWeek);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 0, 1, fields, ENC_BIG_ENDIAN);
-  }
-
-
+                                     8, 8, FALSE, ivi_DayOfWeek_bits, 8, NULL, NULL);
 
   return offset;
 }
@@ -6561,7 +6487,7 @@ dissect_ivi_SEQUENCE_SIZE_1_4__OF_RSCode(tvbuff_t *tvb _U_, int offset _U_, asn1
 static int
 dissect_ivi_BIT_STRING_SIZE_10(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     10, 10, FALSE, NULL, NULL);
+                                     10, 10, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -6991,7 +6917,7 @@ static const per_sequence_t ivi_IviStructure_sequence[] = {
 
 static int
 dissect_ivi_IviStructure(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 302 "./asn1/its/its.cnf"
+#line 303 "./asn1/its/its.cnf"
   actx->private_data = (void*)wmem_new0(wmem_packet_scope(), its_private_data_t);
   col_set_str(actx->pinfo->cinfo, COL_PROTOCOL, "IVIM");
   col_set_str(actx->pinfo->cinfo, COL_INFO, "IVIM");
@@ -7124,41 +7050,28 @@ dissect_dsrc_MsgCount(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, p
 }
 
 
+static const int * dsrc_IntersectionStatusObject_bits[] = {
+  &hf_dsrc_IntersectionStatusObject_manualControlIsEnabled,
+  &hf_dsrc_IntersectionStatusObject_stopTimeIsActivated,
+  &hf_dsrc_IntersectionStatusObject_failureFlash,
+  &hf_dsrc_IntersectionStatusObject_preemptIsActive,
+  &hf_dsrc_IntersectionStatusObject_signalPriorityIsActive,
+  &hf_dsrc_IntersectionStatusObject_fixedTimeOperation,
+  &hf_dsrc_IntersectionStatusObject_trafficDependentOperation,
+  &hf_dsrc_IntersectionStatusObject_standbyOperation,
+  &hf_dsrc_IntersectionStatusObject_failureMode,
+  &hf_dsrc_IntersectionStatusObject_off,
+  &hf_dsrc_IntersectionStatusObject_recentMAPmessageUpdate,
+  &hf_dsrc_IntersectionStatusObject_recentChangeInMAPassignedLanesIDsUsed,
+  &hf_dsrc_IntersectionStatusObject_noValidMAPisAvailableAtThisTime,
+  &hf_dsrc_IntersectionStatusObject_noValidSPATisAvailableAtThisTime,
+  NULL
+};
 
 static int
 dissect_dsrc_IntersectionStatusObject(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 837 "./asn1/its/its.cnf"
-  tvbuff_t *parameter_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     16, 16, FALSE, &parameter_tvb, NULL);
-
-  if (parameter_tvb) {
-    const gint *fields0[] = { // CHECKED
-      &hf_dsrc_IntersectionStatusObject_manualControlIsEnabled,
-      &hf_dsrc_IntersectionStatusObject_stopTimeIsActivated,
-      &hf_dsrc_IntersectionStatusObject_failureFlash,
-      &hf_dsrc_IntersectionStatusObject_preemptIsActive,
-      &hf_dsrc_IntersectionStatusObject_signalPriorityIsActive,
-      &hf_dsrc_IntersectionStatusObject_fixedTimeOperation,
-      &hf_dsrc_IntersectionStatusObject_trafficDependentOperation,
-      &hf_dsrc_IntersectionStatusObject_standbyOperation,
-      NULL
-    };
-    const gint *fields1[] = { // CHECKED
-      &hf_dsrc_IntersectionStatusObject_failureMode,
-      &hf_dsrc_IntersectionStatusObject_off,
-      &hf_dsrc_IntersectionStatusObject_recentMAPmessageUpdate,
-      &hf_dsrc_IntersectionStatusObject_recentChangeInMAPassignedLanesIDsUsed,
-      &hf_dsrc_IntersectionStatusObject_noValidMAPisAvailableAtThisTime,
-      &hf_dsrc_IntersectionStatusObject_noValidSPATisAvailableAtThisTime,
-      NULL
-    };
-    proto_tree *subtree = proto_item_add_subtree(actx->created_item, ett_dsrc_IntersectionStatusObject);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 0, 1, fields0, ENC_BIG_ENDIAN);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 1, 1, fields1, ENC_BIG_ENDIAN);
-  }
-
-
+                                     16, 16, FALSE, dsrc_IntersectionStatusObject_bits, 14, NULL, NULL);
 
   return offset;
 }
@@ -7345,14 +7258,14 @@ static const per_sequence_t dsrc_AdvisorySpeed_sequence[] = {
 
 static int
 dissect_dsrc_AdvisorySpeed(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 381 "./asn1/its/its.cnf"
+#line 382 "./asn1/its/its.cnf"
   enum regext_type_enum save = ((its_private_data_t*)actx->private_data)->type;
   ((its_private_data_t*)actx->private_data)->type = Reg_AdvisorySpeed;
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_dsrc_AdvisorySpeed, dsrc_AdvisorySpeed_sequence);
 
-#line 385 "./asn1/its/its.cnf"
+#line 386 "./asn1/its/its.cnf"
   ((its_private_data_t*)actx->private_data)->type = save;
 
   return offset;
@@ -7397,14 +7310,14 @@ static const per_sequence_t dsrc_MovementEvent_sequence[] = {
 
 static int
 dissect_dsrc_MovementEvent(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 453 "./asn1/its/its.cnf"
+#line 454 "./asn1/its/its.cnf"
   enum regext_type_enum save = ((its_private_data_t*)actx->private_data)->type;
   ((its_private_data_t*)actx->private_data)->type = Reg_MovementEvent;
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_dsrc_MovementEvent, dsrc_MovementEvent_sequence);
 
-#line 457 "./asn1/its/its.cnf"
+#line 458 "./asn1/its/its.cnf"
   ((its_private_data_t*)actx->private_data)->type = save;
 
   return offset;
@@ -7479,14 +7392,14 @@ static const per_sequence_t dsrc_ConnectionManeuverAssist_sequence[] = {
 
 static int
 dissect_dsrc_ConnectionManeuverAssist(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 399 "./asn1/its/its.cnf"
+#line 400 "./asn1/its/its.cnf"
   enum regext_type_enum save = ((its_private_data_t*)actx->private_data)->type;
   ((its_private_data_t*)actx->private_data)->type = Reg_ConnectionManeuverAssist;
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_dsrc_ConnectionManeuverAssist, dsrc_ConnectionManeuverAssist_sequence);
 
-#line 403 "./asn1/its/its.cnf"
+#line 404 "./asn1/its/its.cnf"
   ((its_private_data_t*)actx->private_data)->type = save;
 
   return offset;
@@ -7532,14 +7445,14 @@ static const per_sequence_t dsrc_MovementState_sequence[] = {
 
 static int
 dissect_dsrc_MovementState(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 462 "./asn1/its/its.cnf"
+#line 463 "./asn1/its/its.cnf"
   enum regext_type_enum save = ((its_private_data_t*)actx->private_data)->type;
   ((its_private_data_t*)actx->private_data)->type = Reg_MovementState;
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_dsrc_MovementState, dsrc_MovementState_sequence);
 
-#line 466 "./asn1/its/its.cnf"
+#line 467 "./asn1/its/its.cnf"
   ((its_private_data_t*)actx->private_data)->type = save;
 
   return offset;
@@ -7590,14 +7503,14 @@ static const per_sequence_t dsrc_IntersectionState_sequence[] = {
 
 static int
 dissect_dsrc_IntersectionState(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 426 "./asn1/its/its.cnf"
+#line 427 "./asn1/its/its.cnf"
   enum regext_type_enum save = ((its_private_data_t*)actx->private_data)->type;
   ((its_private_data_t*)actx->private_data)->type = Reg_IntersectionState;
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_dsrc_IntersectionState, dsrc_IntersectionState_sequence);
 
-#line 430 "./asn1/its/its.cnf"
+#line 431 "./asn1/its/its.cnf"
   ((its_private_data_t*)actx->private_data)->type = save;
 
   return offset;
@@ -7642,7 +7555,7 @@ static const per_sequence_t dsrc_SPAT_sequence[] = {
 
 static int
 dissect_dsrc_SPAT(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 332 "./asn1/its/its.cnf"
+#line 333 "./asn1/its/its.cnf"
   its_private_data_t *regext = wmem_new0(wmem_packet_scope(), its_private_data_t);
   actx->private_data = (void*)regext;
   col_set_str(actx->pinfo->cinfo, COL_PROTOCOL, "SPATEM");
@@ -7744,14 +7657,14 @@ static const per_sequence_t dsrc_SignalRequest_sequence[] = {
 
 static int
 dissect_dsrc_SignalRequest(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 543 "./asn1/its/its.cnf"
+#line 544 "./asn1/its/its.cnf"
   enum regext_type_enum save = ((its_private_data_t*)actx->private_data)->type;
   ((its_private_data_t*)actx->private_data)->type = Reg_SignalRequest;
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_dsrc_SignalRequest, dsrc_SignalRequest_sequence);
 
-#line 547 "./asn1/its/its.cnf"
+#line 548 "./asn1/its/its.cnf"
   ((its_private_data_t*)actx->private_data)->type = save;
 
   return offset;
@@ -7783,14 +7696,14 @@ static const per_sequence_t dsrc_SignalRequestPackage_sequence[] = {
 
 static int
 dissect_dsrc_SignalRequestPackage(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 534 "./asn1/its/its.cnf"
+#line 535 "./asn1/its/its.cnf"
   enum regext_type_enum save = ((its_private_data_t*)actx->private_data)->type;
   ((its_private_data_t*)actx->private_data)->type = Reg_SignalRequestPackage;
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_dsrc_SignalRequestPackage, dsrc_SignalRequestPackage_sequence);
 
-#line 538 "./asn1/its/its.cnf"
+#line 539 "./asn1/its/its.cnf"
   ((its_private_data_t*)actx->private_data)->type = save;
 
   return offset;
@@ -7982,14 +7895,14 @@ static const per_sequence_t dsrc_RequestorType_sequence[] = {
 
 static int
 dissect_dsrc_RequestorType(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 507 "./asn1/its/its.cnf"
+#line 508 "./asn1/its/its.cnf"
   enum regext_type_enum save = ((its_private_data_t*)actx->private_data)->type;
   ((its_private_data_t*)actx->private_data)->type = Reg_RequestorType;
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_dsrc_RequestorType, dsrc_RequestorType_sequence);
 
-#line 511 "./asn1/its/its.cnf"
+#line 512 "./asn1/its/its.cnf"
   ((its_private_data_t*)actx->private_data)->type = save;
 
   return offset;
@@ -8030,14 +7943,14 @@ static const per_sequence_t dsrc_Position3D_sequence[] = {
 
 static int
 dissect_dsrc_Position3D(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 489 "./asn1/its/its.cnf"
+#line 490 "./asn1/its/its.cnf"
   enum regext_type_enum save = ((its_private_data_t*)actx->private_data)->type;
   ((its_private_data_t*)actx->private_data)->type = Reg_Position3D;
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_dsrc_Position3D, dsrc_Position3D_sequence);
 
-#line 493 "./asn1/its/its.cnf"
+#line 494 "./asn1/its/its.cnf"
   ((its_private_data_t*)actx->private_data)->type = save;
 
   return offset;
@@ -8117,29 +8030,20 @@ dissect_dsrc_RequestorPositionVector(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx
 }
 
 
+static const int * dsrc_TransitVehicleStatus_bits[] = {
+  &hf_dsrc_TransitVehicleStatus_loading,
+  &hf_dsrc_TransitVehicleStatus_anADAuse,
+  &hf_dsrc_TransitVehicleStatus_aBikeLoad,
+  &hf_dsrc_TransitVehicleStatus_doorOpen,
+  &hf_dsrc_TransitVehicleStatus_charging,
+  &hf_dsrc_TransitVehicleStatus_atStopLine,
+  NULL
+};
 
 static int
 dissect_dsrc_TransitVehicleStatus(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 1027 "./asn1/its/its.cnf"
-  tvbuff_t *parameter_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     8, 8, FALSE, &parameter_tvb, NULL);
-
-  if (parameter_tvb) {
-    const gint *fields[] = { // CHECKED
-      &hf_dsrc_TransitVehicleStatus_loading,
-      &hf_dsrc_TransitVehicleStatus_anADAuse,
-      &hf_dsrc_TransitVehicleStatus_aBikeLoad,
-      &hf_dsrc_TransitVehicleStatus_doorOpen,
-      &hf_dsrc_TransitVehicleStatus_charging,
-      &hf_dsrc_TransitVehicleStatus_atStopLine,
-      NULL
-    };
-    proto_tree *subtree = proto_item_add_subtree(actx->created_item, ett_dsrc_TransitVehicleStatus);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 0, 1, fields, ENC_BIG_ENDIAN);
-  }
-
-
+                                     8, 8, FALSE, dsrc_TransitVehicleStatus_bits, 6, NULL, NULL);
 
   return offset;
 }
@@ -8206,14 +8110,14 @@ static const per_sequence_t dsrc_RequestorDescription_sequence[] = {
 
 static int
 dissect_dsrc_RequestorDescription(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 498 "./asn1/its/its.cnf"
+#line 499 "./asn1/its/its.cnf"
   enum regext_type_enum save = ((its_private_data_t*)actx->private_data)->type;
   ((its_private_data_t*)actx->private_data)->type = Reg_RequestorDescription;
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_dsrc_RequestorDescription, dsrc_RequestorDescription_sequence);
 
-#line 502 "./asn1/its/its.cnf"
+#line 503 "./asn1/its/its.cnf"
   ((its_private_data_t*)actx->private_data)->type = save;
 
   return offset;
@@ -8246,7 +8150,7 @@ static const per_sequence_t dsrc_SignalRequestMessage_sequence[] = {
 
 static int
 dissect_dsrc_SignalRequestMessage(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 316 "./asn1/its/its.cnf"
+#line 317 "./asn1/its/its.cnf"
   its_private_data_t *regext = wmem_new0(wmem_packet_scope(), its_private_data_t);
   actx->private_data = (void*)regext;
   col_set_str(actx->pinfo->cinfo, COL_PROTOCOL, "SREM");
@@ -8328,14 +8232,14 @@ static const per_sequence_t dsrc_SignalStatusPackage_sequence[] = {
 
 static int
 dissect_dsrc_SignalStatusPackage(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 552 "./asn1/its/its.cnf"
+#line 553 "./asn1/its/its.cnf"
   enum regext_type_enum save = ((its_private_data_t*)actx->private_data)->type;
   ((its_private_data_t*)actx->private_data)->type = Reg_SignalStatusPackage;
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_dsrc_SignalStatusPackage, dsrc_SignalStatusPackage_sequence);
 
-#line 556 "./asn1/its/its.cnf"
+#line 557 "./asn1/its/its.cnf"
   ((its_private_data_t*)actx->private_data)->type = save;
 
   return offset;
@@ -8380,14 +8284,14 @@ static const per_sequence_t dsrc_SignalStatus_sequence[] = {
 
 static int
 dissect_dsrc_SignalStatus(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 561 "./asn1/its/its.cnf"
+#line 562 "./asn1/its/its.cnf"
   enum regext_type_enum save = ((its_private_data_t*)actx->private_data)->type;
   ((its_private_data_t*)actx->private_data)->type = Reg_SignalStatus;
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_dsrc_SignalStatus, dsrc_SignalStatus_sequence);
 
-#line 565 "./asn1/its/its.cnf"
+#line 566 "./asn1/its/its.cnf"
   ((its_private_data_t*)actx->private_data)->type = save;
 
   return offset;
@@ -8433,7 +8337,7 @@ static const per_sequence_t dsrc_SignalStatusMessage_sequence[] = {
 
 static int
 dissect_dsrc_SignalStatusMessage(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 308 "./asn1/its/its.cnf"
+#line 309 "./asn1/its/its.cnf"
   its_private_data_t *regext = wmem_new0(wmem_packet_scope(), its_private_data_t);
   actx->private_data = (void*)regext;
   col_set_str(actx->pinfo->cinfo, COL_PROTOCOL, "SSEM");
@@ -8545,301 +8449,199 @@ dissect_dsrc_SpeedLimitList(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx 
 }
 
 
+static const int * dsrc_LaneDirection_bits[] = {
+  &hf_dsrc_LaneDirection_ingressPath,
+  &hf_dsrc_LaneDirection_egressPath,
+  NULL
+};
 
 static int
 dissect_dsrc_LaneDirection(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 917 "./asn1/its/its.cnf"
-  tvbuff_t *parameter_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     2, 2, FALSE, &parameter_tvb, NULL);
-
-  if (parameter_tvb) {
-    const gint *fields[] = { // CHECKED
-      &hf_dsrc_LaneDirection_ingressPath,
-      &hf_dsrc_LaneDirection_egressPath,
-      NULL
-    };
-    proto_tree *subtree = proto_item_add_subtree(actx->created_item, ett_dsrc_LaneDirection);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 0, 1, fields, ENC_BIG_ENDIAN);
-  }
-
-
+                                     2, 2, FALSE, dsrc_LaneDirection_bits, 2, NULL, NULL);
 
   return offset;
 }
 
 
+static const int * dsrc_LaneSharing_bits[] = {
+  &hf_dsrc_LaneSharing_overlappingLaneDescriptionProvided,
+  &hf_dsrc_LaneSharing_multipleLanesTreatedAsOneLane,
+  &hf_dsrc_LaneSharing_otherNonMotorizedTrafficTypes,
+  &hf_dsrc_LaneSharing_individualMotorizedVehicleTraffic,
+  &hf_dsrc_LaneSharing_busVehicleTraffic,
+  &hf_dsrc_LaneSharing_taxiVehicleTraffic,
+  &hf_dsrc_LaneSharing_pedestriansTraffic,
+  &hf_dsrc_LaneSharing_cyclistVehicleTraffic,
+  &hf_dsrc_LaneSharing_trackedVehicleTraffic,
+  &hf_dsrc_LaneSharing_pedestrianTraffic,
+  NULL
+};
 
 static int
 dissect_dsrc_LaneSharing(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 1002 "./asn1/its/its.cnf"
-  tvbuff_t *parameter_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     10, 10, FALSE, &parameter_tvb, NULL);
-
-  if (parameter_tvb) {
-    const gint *fields0[] = { // CHECKED
-      &hf_dsrc_LaneSharing_overlappingLaneDescriptionProvided,
-      &hf_dsrc_LaneSharing_multipleLanesTreatedAsOneLane,
-      &hf_dsrc_LaneSharing_otherNonMotorizedTrafficTypes,
-      &hf_dsrc_LaneSharing_individualMotorizedVehicleTraffic,
-      &hf_dsrc_LaneSharing_busVehicleTraffic,
-      &hf_dsrc_LaneSharing_taxiVehicleTraffic,
-      &hf_dsrc_LaneSharing_pedestriansTraffic,
-      &hf_dsrc_LaneSharing_cyclistVehicleTraffic,
-      NULL
-    };
-    const gint *fields1[] = { // CHECKED
-      &hf_dsrc_LaneSharing_trackedVehicleTraffic,
-      &hf_dsrc_LaneSharing_pedestrianTraffic,
-      NULL
-    };
-    proto_tree *subtree = proto_item_add_subtree(actx->created_item, ett_dsrc_LaneSharing);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 0, 1, fields0, ENC_BIG_ENDIAN);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 1, 1, fields1, ENC_BIG_ENDIAN);
-  }
-
-
+                                     10, 10, FALSE, dsrc_LaneSharing_bits, 10, NULL, NULL);
 
   return offset;
 }
 
 
+static const int * dsrc_LaneAttributes_Vehicle_bits[] = {
+  &hf_dsrc_LaneAttributes_Vehicle_isVehicleRevocableLane,
+  &hf_dsrc_LaneAttributes_Vehicle_isVehicleFlyOverLane,
+  &hf_dsrc_LaneAttributes_Vehicle_hovLaneUseOnly,
+  &hf_dsrc_LaneAttributes_Vehicle_restrictedToBusUse,
+  &hf_dsrc_LaneAttributes_Vehicle_restrictedToTaxiUse,
+  &hf_dsrc_LaneAttributes_Vehicle_restrictedFromPublicUse,
+  &hf_dsrc_LaneAttributes_Vehicle_hasIRbeaconCoverage,
+  &hf_dsrc_LaneAttributes_Vehicle_permissionOnRequest,
+  NULL
+};
 
 static int
 dissect_dsrc_LaneAttributes_Vehicle(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 739 "./asn1/its/its.cnf"
-  tvbuff_t *parameter_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     8, 8, TRUE, &parameter_tvb, NULL);
-
-  if (parameter_tvb) {
-    const gint *fields[] = { // CHECKED
-      &hf_dsrc_LaneAttributes_Vehicle_isVehicleRevocableLane,
-      &hf_dsrc_LaneAttributes_Vehicle_isVehicleFlyOverLane,
-      &hf_dsrc_LaneAttributes_Vehicle_hovLaneUseOnly,
-      &hf_dsrc_LaneAttributes_Vehicle_restrictedToBusUse,
-      &hf_dsrc_LaneAttributes_Vehicle_restrictedToTaxiUse,
-      &hf_dsrc_LaneAttributes_Vehicle_restrictedFromPublicUse,
-      &hf_dsrc_LaneAttributes_Vehicle_hasIRbeaconCoverage,
-      &hf_dsrc_LaneAttributes_Vehicle_permissionOnRequest,
-      NULL
-    };
-    proto_tree *subtree = proto_item_add_subtree(actx->created_item, ett_dsrc_LaneAttributes_Vehicle);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 0, 1, fields, ENC_BIG_ENDIAN);
-  }
-
-
+                                     8, 8, TRUE, dsrc_LaneAttributes_Vehicle_bits, 8, NULL, NULL);
 
   return offset;
 }
 
 
+static const int * dsrc_LaneAttributes_Crosswalk_bits[] = {
+  &hf_dsrc_LaneAttributes_Crosswalk_crosswalkRevocableLane,
+  &hf_dsrc_LaneAttributes_Crosswalk_bicyleUseAllowed,
+  &hf_dsrc_LaneAttributes_Crosswalk_isXwalkFlyOverLane,
+  &hf_dsrc_LaneAttributes_Crosswalk_fixedCycleTime,
+  &hf_dsrc_LaneAttributes_Crosswalk_biDirectionalCycleTimes,
+  &hf_dsrc_LaneAttributes_Crosswalk_hasPushToWalkButton,
+  &hf_dsrc_LaneAttributes_Crosswalk_audioSupport,
+  &hf_dsrc_LaneAttributes_Crosswalk_rfSignalRequestPresent,
+  &hf_dsrc_LaneAttributes_Crosswalk_unsignalizedSegmentsPresent,
+  NULL
+};
 
 static int
 dissect_dsrc_LaneAttributes_Crosswalk(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 893 "./asn1/its/its.cnf"
-  tvbuff_t *parameter_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     16, 16, FALSE, &parameter_tvb, NULL);
-
-  if (parameter_tvb) {
-    const gint *fields0[] = { // CHECKED
-      &hf_dsrc_LaneAttributes_Crosswalk_crosswalkRevocableLane,
-      &hf_dsrc_LaneAttributes_Crosswalk_bicyleUseAllowed,
-      &hf_dsrc_LaneAttributes_Crosswalk_isXwalkFlyOverLane,
-      &hf_dsrc_LaneAttributes_Crosswalk_fixedCycleTime,
-      &hf_dsrc_LaneAttributes_Crosswalk_biDirectionalCycleTimes,
-      &hf_dsrc_LaneAttributes_Crosswalk_hasPushToWalkButton,
-      &hf_dsrc_LaneAttributes_Crosswalk_audioSupport,
-      &hf_dsrc_LaneAttributes_Crosswalk_rfSignalRequestPresent,
-      NULL
-    };
-    const gint *fields1[] = { // CHECKED
-      &hf_dsrc_LaneAttributes_Crosswalk_unsignalizedSegmentsPresent,
-      NULL
-    };
-    proto_tree *subtree = proto_item_add_subtree(actx->created_item, ett_dsrc_LaneAttributes_Crosswalk);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 0, 1, fields0, ENC_BIG_ENDIAN);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 1, 1, fields1, ENC_BIG_ENDIAN);
-  }
-
-
+                                     16, 16, FALSE, dsrc_LaneAttributes_Crosswalk_bits, 9, NULL, NULL);
 
   return offset;
 }
 
 
+static const int * dsrc_LaneAttributes_Bike_bits[] = {
+  &hf_dsrc_LaneAttributes_Bike_bikeRevocableLane,
+  &hf_dsrc_LaneAttributes_Bike_pedestrianUseAllowed,
+  &hf_dsrc_LaneAttributes_Bike_isBikeFlyOverLane,
+  &hf_dsrc_LaneAttributes_Bike_fixedCycleTime,
+  &hf_dsrc_LaneAttributes_Bike_biDirectionalCycleTimes,
+  &hf_dsrc_LaneAttributes_Bike_isolatedByBarrier,
+  &hf_dsrc_LaneAttributes_Bike_unsignalizedSegmentsPresent,
+  NULL
+};
 
 static int
 dissect_dsrc_LaneAttributes_Bike(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 930 "./asn1/its/its.cnf"
-  tvbuff_t *parameter_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     16, 16, FALSE, &parameter_tvb, NULL);
-
-  if (parameter_tvb) {
-    const gint *fields[] = { // CHECKED
-      &hf_dsrc_LaneAttributes_Bike_bikeRevocableLane,
-      &hf_dsrc_LaneAttributes_Bike_pedestrianUseAllowed,
-      &hf_dsrc_LaneAttributes_Bike_isBikeFlyOverLane,
-      &hf_dsrc_LaneAttributes_Bike_fixedCycleTime,
-      &hf_dsrc_LaneAttributes_Bike_biDirectionalCycleTimes,
-      &hf_dsrc_LaneAttributes_Bike_isolatedByBarrier,
-      &hf_dsrc_LaneAttributes_Bike_unsignalizedSegmentsPresent,
-      NULL
-    };
-    proto_tree *subtree = proto_item_add_subtree(actx->created_item, ett_dsrc_LaneAttributes_Bike);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 0, 1, fields, ENC_BIG_ENDIAN);
-  }
-
-
+                                     16, 16, FALSE, dsrc_LaneAttributes_Bike_bits, 7, NULL, NULL);
 
   return offset;
 }
 
 
+static const int * dsrc_LaneAttributes_Sidewalk_bits[] = {
+  &hf_dsrc_LaneAttributes_Sidewalk_sidewalk_RevocableLane,
+  &hf_dsrc_LaneAttributes_Sidewalk_bicyleUseAllowed,
+  &hf_dsrc_LaneAttributes_Sidewalk_isSidewalkFlyOverLane,
+  &hf_dsrc_LaneAttributes_Sidewalk_walkBikes,
+  NULL
+};
 
 static int
 dissect_dsrc_LaneAttributes_Sidewalk(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 1044 "./asn1/its/its.cnf"
-  tvbuff_t *parameter_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     16, 16, FALSE, &parameter_tvb, NULL);
-
-  if (parameter_tvb) {
-    const gint *fields[] = { // CHECKED
-      &hf_dsrc_LaneAttributes_Sidewalk_sidewalk_RevocableLane,
-      &hf_dsrc_LaneAttributes_Sidewalk_bicyleUseAllowed,
-      &hf_dsrc_LaneAttributes_Sidewalk_isSidewalkFlyOverLane,
-      &hf_dsrc_LaneAttributes_Sidewalk_walkBikes,
-      NULL
-    };
-    proto_tree *subtree = proto_item_add_subtree(actx->created_item, ett_dsrc_LaneAttributes_Sidewalk);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 0, 1, fields, ENC_BIG_ENDIAN);
-  }
-
-
+                                     16, 16, FALSE, dsrc_LaneAttributes_Sidewalk_bits, 4, NULL, NULL);
 
   return offset;
 }
 
 
+static const int * dsrc_LaneAttributes_Barrier_bits[] = {
+  &hf_dsrc_LaneAttributes_Barrier_median_RevocableLane,
+  &hf_dsrc_LaneAttributes_Barrier_median,
+  &hf_dsrc_LaneAttributes_Barrier_whiteLineHashing,
+  &hf_dsrc_LaneAttributes_Barrier_stripedLines,
+  &hf_dsrc_LaneAttributes_Barrier_doubleStripedLines,
+  &hf_dsrc_LaneAttributes_Barrier_trafficCones,
+  &hf_dsrc_LaneAttributes_Barrier_constructionBarrier,
+  &hf_dsrc_LaneAttributes_Barrier_trafficChannels,
+  &hf_dsrc_LaneAttributes_Barrier_lowCurbs,
+  &hf_dsrc_LaneAttributes_Barrier_highCurbs,
+  NULL
+};
 
 static int
 dissect_dsrc_LaneAttributes_Barrier(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 699 "./asn1/its/its.cnf"
-  tvbuff_t *parameter_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     16, 16, FALSE, &parameter_tvb, NULL);
-
-  if (parameter_tvb) {
-    const gint *fields0[] = { // CHECKED
-      &hf_dsrc_LaneAttributes_Barrier_median_RevocableLane,
-      &hf_dsrc_LaneAttributes_Barrier_median,
-      &hf_dsrc_LaneAttributes_Barrier_whiteLineHashing,
-      &hf_dsrc_LaneAttributes_Barrier_stripedLines,
-      &hf_dsrc_LaneAttributes_Barrier_doubleStripedLines,
-      &hf_dsrc_LaneAttributes_Barrier_trafficCones,
-      &hf_dsrc_LaneAttributes_Barrier_constructionBarrier,
-      &hf_dsrc_LaneAttributes_Barrier_trafficChannels,
-      NULL
-    };
-    const gint *fields1[] = { // CHECKED
-      &hf_dsrc_LaneAttributes_Barrier_lowCurbs,
-      &hf_dsrc_LaneAttributes_Barrier_highCurbs,
-      NULL
-    };
-    proto_tree *subtree = proto_item_add_subtree(actx->created_item, ett_dsrc_LaneAttributes_Barrier);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 0, 1, fields0, ENC_BIG_ENDIAN);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 1, 1, fields1, ENC_BIG_ENDIAN);
-  }
-
-
+                                     16, 16, FALSE, dsrc_LaneAttributes_Barrier_bits, 10, NULL, NULL);
 
   return offset;
 }
 
 
+static const int * dsrc_LaneAttributes_Striping_bits[] = {
+  &hf_dsrc_LaneAttributes_Striping_stripeToConnectingLanesRevocableLane,
+  &hf_dsrc_LaneAttributes_Striping_stripeDrawOnLeft,
+  &hf_dsrc_LaneAttributes_Striping_stripeDrawOnRight,
+  &hf_dsrc_LaneAttributes_Striping_stripeToConnectingLanesLeft,
+  &hf_dsrc_LaneAttributes_Striping_stripeToConnectingLanesRight,
+  &hf_dsrc_LaneAttributes_Striping_stripeToConnectingLanesAhead,
+  NULL
+};
 
 static int
 dissect_dsrc_LaneAttributes_Striping(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 985 "./asn1/its/its.cnf"
-  tvbuff_t *parameter_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     16, 16, FALSE, &parameter_tvb, NULL);
-
-  if (parameter_tvb) {
-    const gint *fields[] = { // CHECKED
-      &hf_dsrc_LaneAttributes_Striping_stripeToConnectingLanesRevocableLane,
-      &hf_dsrc_LaneAttributes_Striping_stripeDrawOnLeft,
-      &hf_dsrc_LaneAttributes_Striping_stripeDrawOnRight,
-      &hf_dsrc_LaneAttributes_Striping_stripeToConnectingLanesLeft,
-      &hf_dsrc_LaneAttributes_Striping_stripeToConnectingLanesRight,
-      &hf_dsrc_LaneAttributes_Striping_stripeToConnectingLanesAhead,
-      NULL
-    };
-    proto_tree *subtree = proto_item_add_subtree(actx->created_item, ett_dsrc_LaneAttributes_Striping);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 0, 1, fields, ENC_BIG_ENDIAN);
-  }
-
-
+                                     16, 16, FALSE, dsrc_LaneAttributes_Striping_bits, 6, NULL, NULL);
 
   return offset;
 }
 
 
+static const int * dsrc_LaneAttributes_TrackedVehicle_bits[] = {
+  &hf_dsrc_LaneAttributes_TrackedVehicle_spec_RevocableLane,
+  &hf_dsrc_LaneAttributes_TrackedVehicle_spec_commuterRailRoadTrack,
+  &hf_dsrc_LaneAttributes_TrackedVehicle_spec_lightRailRoadTrack,
+  &hf_dsrc_LaneAttributes_TrackedVehicle_spec_heavyRailRoadTrack,
+  &hf_dsrc_LaneAttributes_TrackedVehicle_spec_otherRailType,
+  NULL
+};
 
 static int
 dissect_dsrc_LaneAttributes_TrackedVehicle(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 771 "./asn1/its/its.cnf"
-  tvbuff_t *parameter_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     16, 16, FALSE, &parameter_tvb, NULL);
-
-  if (parameter_tvb) {
-    const gint *fields[] = { // CHECKED
-      &hf_dsrc_LaneAttributes_TrackedVehicle_spec_RevocableLane,
-      &hf_dsrc_LaneAttributes_TrackedVehicle_spec_commuterRailRoadTrack,
-      &hf_dsrc_LaneAttributes_TrackedVehicle_spec_lightRailRoadTrack,
-      &hf_dsrc_LaneAttributes_TrackedVehicle_spec_heavyRailRoadTrack,
-      &hf_dsrc_LaneAttributes_TrackedVehicle_spec_otherRailType,
-      NULL
-    };
-    proto_tree *subtree = proto_item_add_subtree(actx->created_item, ett_dsrc_LaneAttributes_TrackedVehicle);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 0, 1, fields, ENC_BIG_ENDIAN);
-  }
-
-
+                                     16, 16, FALSE, dsrc_LaneAttributes_TrackedVehicle_bits, 5, NULL, NULL);
 
   return offset;
 }
 
 
+static const int * dsrc_LaneAttributes_Parking_bits[] = {
+  &hf_dsrc_LaneAttributes_Parking_parkingRevocableLane,
+  &hf_dsrc_LaneAttributes_Parking_parallelParkingInUse,
+  &hf_dsrc_LaneAttributes_Parking_headInParkingInUse,
+  &hf_dsrc_LaneAttributes_Parking_doNotParkZone,
+  &hf_dsrc_LaneAttributes_Parking_parkingForBusUse,
+  &hf_dsrc_LaneAttributes_Parking_parkingForTaxiUse,
+  &hf_dsrc_LaneAttributes_Parking_noPublicParkingUse,
+  NULL
+};
 
 static int
 dissect_dsrc_LaneAttributes_Parking(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 948 "./asn1/its/its.cnf"
-  tvbuff_t *parameter_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     16, 16, FALSE, &parameter_tvb, NULL);
-
-  if (parameter_tvb) {
-    const gint *fields[] = { // CHECKED
-      &hf_dsrc_LaneAttributes_Parking_parkingRevocableLane,
-      &hf_dsrc_LaneAttributes_Parking_parallelParkingInUse,
-      &hf_dsrc_LaneAttributes_Parking_headInParkingInUse,
-      &hf_dsrc_LaneAttributes_Parking_doNotParkZone,
-      &hf_dsrc_LaneAttributes_Parking_parkingForBusUse,
-      &hf_dsrc_LaneAttributes_Parking_parkingForTaxiUse,
-      &hf_dsrc_LaneAttributes_Parking_noPublicParkingUse,
-      NULL
-    };
-    proto_tree *subtree = proto_item_add_subtree(actx->created_item, ett_dsrc_LaneAttributes_Parking);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 0, 1, fields, ENC_BIG_ENDIAN);
-  }
-
-
+                                     16, 16, FALSE, dsrc_LaneAttributes_Parking_bits, 7, NULL, NULL);
 
   return offset;
 }
@@ -8889,53 +8691,40 @@ static const per_sequence_t dsrc_LaneAttributes_sequence[] = {
 
 static int
 dissect_dsrc_LaneAttributes(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 435 "./asn1/its/its.cnf"
+#line 436 "./asn1/its/its.cnf"
   enum regext_type_enum save = ((its_private_data_t*)actx->private_data)->type;
   ((its_private_data_t*)actx->private_data)->type = Reg_LaneAttributes;
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_dsrc_LaneAttributes, dsrc_LaneAttributes_sequence);
 
-#line 439 "./asn1/its/its.cnf"
+#line 440 "./asn1/its/its.cnf"
   ((its_private_data_t*)actx->private_data)->type = save;
 
   return offset;
 }
 
 
+static const int * dsrc_AllowedManeuvers_bits[] = {
+  &hf_dsrc_AllowedManeuvers_maneuverStraightAllowed,
+  &hf_dsrc_AllowedManeuvers_maneuverLeftAllowed,
+  &hf_dsrc_AllowedManeuvers_maneuverRightAllowed,
+  &hf_dsrc_AllowedManeuvers_maneuverUTurnAllowed,
+  &hf_dsrc_AllowedManeuvers_maneuverLeftTurnOnRedAllowed,
+  &hf_dsrc_AllowedManeuvers_maneuverRightTurnOnRedAllowed,
+  &hf_dsrc_AllowedManeuvers_maneuverLaneChangeAllowed,
+  &hf_dsrc_AllowedManeuvers_maneuverNoStoppingAllowed,
+  &hf_dsrc_AllowedManeuvers_yieldAllwaysRequired,
+  &hf_dsrc_AllowedManeuvers_goWithHalt,
+  &hf_dsrc_AllowedManeuvers_caution,
+  &hf_dsrc_AllowedManeuvers_reserved1,
+  NULL
+};
 
 static int
 dissect_dsrc_AllowedManeuvers(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 866 "./asn1/its/its.cnf"
-  tvbuff_t *parameter_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     12, 12, FALSE, &parameter_tvb, NULL);
-
-  if (parameter_tvb) {
-    const gint *fields0[] = { // CHECKED
-      &hf_dsrc_AllowedManeuvers_maneuverStraightAllowed,
-      &hf_dsrc_AllowedManeuvers_maneuverLeftAllowed,
-      &hf_dsrc_AllowedManeuvers_maneuverRightAllowed,
-      &hf_dsrc_AllowedManeuvers_maneuverUTurnAllowed,
-      &hf_dsrc_AllowedManeuvers_maneuverLeftTurnOnRedAllowed,
-      &hf_dsrc_AllowedManeuvers_maneuverRightTurnOnRedAllowed,
-      &hf_dsrc_AllowedManeuvers_maneuverLaneChangeAllowed,
-      &hf_dsrc_AllowedManeuvers_maneuverNoStoppingAllowed,
-      NULL
-    };
-    const gint *fields1[] = { // CHECKED
-      &hf_dsrc_AllowedManeuvers_yieldAllwaysRequired,
-      &hf_dsrc_AllowedManeuvers_goWithHalt,
-      &hf_dsrc_AllowedManeuvers_caution,
-      &hf_dsrc_AllowedManeuvers_reserved1,
-      NULL
-    };
-    proto_tree *subtree = proto_item_add_subtree(actx->created_item, ett_dsrc_AllowedManeuvers);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 0, 1, fields0, ENC_BIG_ENDIAN);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 1, 1, fields1, ENC_BIG_ENDIAN);
-  }
-
-
+                                     12, 12, FALSE, dsrc_AllowedManeuvers_bits, 12, NULL, NULL);
 
   return offset;
 }
@@ -9132,7 +8921,7 @@ static const per_choice_t dsrc_NodeOffsetPointXY_choice[] = {
 
 static int
 dissect_dsrc_NodeOffsetPointXY(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 480 "./asn1/its/its.cnf"
+#line 481 "./asn1/its/its.cnf"
   enum regext_type_enum save = ((its_private_data_t*)actx->private_data)->type;
   ((its_private_data_t*)actx->private_data)->type = Reg_NodeOffsetPointXY;
 
@@ -9140,7 +8929,7 @@ dissect_dsrc_NodeOffsetPointXY(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *ac
                                  ett_dsrc_NodeOffsetPointXY, dsrc_NodeOffsetPointXY_choice,
                                  NULL);
 
-#line 484 "./asn1/its/its.cnf"
+#line 485 "./asn1/its/its.cnf"
   ((its_private_data_t*)actx->private_data)->type = save;
 
   return offset;
@@ -9321,7 +9110,7 @@ static const per_choice_t dsrc_LaneDataAttribute_choice[] = {
 
 static int
 dissect_dsrc_LaneDataAttribute(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 444 "./asn1/its/its.cnf"
+#line 445 "./asn1/its/its.cnf"
   enum regext_type_enum save = ((its_private_data_t*)actx->private_data)->type;
   ((its_private_data_t*)actx->private_data)->type = Reg_LaneDataAttribute;
 
@@ -9329,7 +9118,7 @@ dissect_dsrc_LaneDataAttribute(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *ac
                                  ett_dsrc_LaneDataAttribute, dsrc_LaneDataAttribute_choice,
                                  NULL);
 
-#line 448 "./asn1/its/its.cnf"
+#line 449 "./asn1/its/its.cnf"
   ((its_private_data_t*)actx->private_data)->type = save;
 
   return offset;
@@ -9377,14 +9166,14 @@ static const per_sequence_t dsrc_NodeAttributeSetXY_sequence[] = {
 
 static int
 dissect_dsrc_NodeAttributeSetXY(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 471 "./asn1/its/its.cnf"
+#line 472 "./asn1/its/its.cnf"
   enum regext_type_enum save = ((its_private_data_t*)actx->private_data)->type;
   ((its_private_data_t*)actx->private_data)->type = Reg_NodeAttributeSetXY;
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_dsrc_NodeAttributeSetXY, dsrc_NodeAttributeSetXY_sequence);
 
-#line 475 "./asn1/its/its.cnf"
+#line 476 "./asn1/its/its.cnf"
   ((its_private_data_t*)actx->private_data)->type = save;
 
   return offset;
@@ -9521,14 +9310,14 @@ static const per_sequence_t dsrc_ComputedLane_sequence[] = {
 
 static int
 dissect_dsrc_ComputedLane(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 390 "./asn1/its/its.cnf"
+#line 391 "./asn1/its/its.cnf"
   enum regext_type_enum save = ((its_private_data_t*)actx->private_data)->type;
   ((its_private_data_t*)actx->private_data)->type = Reg_ComputedLane;
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_dsrc_ComputedLane, dsrc_ComputedLane_sequence);
 
-#line 394 "./asn1/its/its.cnf"
+#line 395 "./asn1/its/its.cnf"
   ((its_private_data_t*)actx->private_data)->type = save;
 
   return offset;
@@ -9648,14 +9437,14 @@ static const per_sequence_t dsrc_GenericLane_sequence[] = {
 
 static int
 dissect_dsrc_GenericLane(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 408 "./asn1/its/its.cnf"
+#line 409 "./asn1/its/its.cnf"
   enum regext_type_enum save = ((its_private_data_t*)actx->private_data)->type;
   ((its_private_data_t*)actx->private_data)->type = Reg_GenericLane;
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_dsrc_GenericLane, dsrc_GenericLane_sequence);
 
-#line 412 "./asn1/its/its.cnf"
+#line 413 "./asn1/its/its.cnf"
   ((its_private_data_t*)actx->private_data)->type = save;
 
   return offset;
@@ -9683,14 +9472,14 @@ static const per_sequence_t dsrc_SignalControlZone_sequence[] = {
 
 static int
 dissect_dsrc_SignalControlZone(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 570 "./asn1/its/its.cnf"
+#line 571 "./asn1/its/its.cnf"
   enum regext_type_enum save = ((its_private_data_t*)actx->private_data)->type;
   ((its_private_data_t*)actx->private_data)->type = Reg_SignalControlZone;
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_dsrc_SignalControlZone, dsrc_SignalControlZone_sequence);
 
-#line 574 "./asn1/its/its.cnf"
+#line 575 "./asn1/its/its.cnf"
   ((its_private_data_t*)actx->private_data)->type = save;
 
   return offset;
@@ -9740,14 +9529,14 @@ static const per_sequence_t dsrc_IntersectionGeometry_sequence[] = {
 
 static int
 dissect_dsrc_IntersectionGeometry(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 417 "./asn1/its/its.cnf"
+#line 418 "./asn1/its/its.cnf"
   enum regext_type_enum save = ((its_private_data_t*)actx->private_data)->type;
   ((its_private_data_t*)actx->private_data)->type = Reg_IntersectionGeometry;
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_dsrc_IntersectionGeometry, dsrc_IntersectionGeometry_sequence);
 
-#line 421 "./asn1/its/its.cnf"
+#line 422 "./asn1/its/its.cnf"
   ((its_private_data_t*)actx->private_data)->type = save;
 
   return offset;
@@ -9835,14 +9624,14 @@ static const per_sequence_t dsrc_RoadSegment_sequence[] = {
 
 static int
 dissect_dsrc_RoadSegment(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 525 "./asn1/its/its.cnf"
+#line 526 "./asn1/its/its.cnf"
   enum regext_type_enum save = ((its_private_data_t*)actx->private_data)->type;
   ((its_private_data_t*)actx->private_data)->type = Reg_RoadSegment;
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
                                    ett_dsrc_RoadSegment, dsrc_RoadSegment_sequence);
 
-#line 529 "./asn1/its/its.cnf"
+#line 530 "./asn1/its/its.cnf"
   ((its_private_data_t*)actx->private_data)->type = save;
 
   return offset;
@@ -9946,7 +9735,7 @@ static const per_choice_t dsrc_RestrictionUserType_choice[] = {
 
 static int
 dissect_dsrc_RestrictionUserType(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 516 "./asn1/its/its.cnf"
+#line 517 "./asn1/its/its.cnf"
   enum regext_type_enum save = ((its_private_data_t*)actx->private_data)->type;
   ((its_private_data_t*)actx->private_data)->type = Reg_RestrictionUserType;
 
@@ -9954,7 +9743,7 @@ dissect_dsrc_RestrictionUserType(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *
                                  ett_dsrc_RestrictionUserType, dsrc_RestrictionUserType_choice,
                                  NULL);
 
-#line 520 "./asn1/its/its.cnf"
+#line 521 "./asn1/its/its.cnf"
   ((its_private_data_t*)actx->private_data)->type = save;
 
   return offset;
@@ -10033,7 +9822,7 @@ static const per_sequence_t dsrc_MapData_sequence[] = {
 
 static int
 dissect_dsrc_MapData(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 324 "./asn1/its/its.cnf"
+#line 325 "./asn1/its/its.cnf"
   its_private_data_t *regext = wmem_new0(wmem_packet_scope(), its_private_data_t);
   actx->private_data = (void*)regext;
   col_set_str(actx->pinfo->cinfo, COL_PROTOCOL, "MAPEM");
@@ -10139,7 +9928,7 @@ static const per_sequence_t AddGrpC_ConnectionManeuverAssist_addGrpC_sequence[] 
 
 static int
 dissect_AddGrpC_ConnectionManeuverAssist_addGrpC(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 341 "./asn1/its/its.cnf"
+#line 342 "./asn1/its/its.cnf"
   actx->private_data = wmem_new0(wmem_packet_scope(), its_private_data_t);
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
@@ -10156,7 +9945,7 @@ static const per_sequence_t AddGrpC_ConnectionTrajectory_addGrpC_sequence[] = {
 
 static int
 dissect_AddGrpC_ConnectionTrajectory_addGrpC(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 346 "./asn1/its/its.cnf"
+#line 347 "./asn1/its/its.cnf"
   actx->private_data = wmem_new0(wmem_packet_scope(), its_private_data_t);
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
@@ -10192,7 +9981,7 @@ static const per_sequence_t AddGrpC_Control_addGrpC_sequence[] = {
 
 static int
 dissect_AddGrpC_Control_addGrpC(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 351 "./asn1/its/its.cnf"
+#line 352 "./asn1/its/its.cnf"
   actx->private_data = wmem_new0(wmem_packet_scope(), its_private_data_t);
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
@@ -10239,7 +10028,7 @@ static const per_sequence_t AddGrpC_IntersectionState_addGrpC_sequence[] = {
 
 static int
 dissect_AddGrpC_IntersectionState_addGrpC(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 356 "./asn1/its/its.cnf"
+#line 357 "./asn1/its/its.cnf"
   actx->private_data = wmem_new0(wmem_packet_scope(), its_private_data_t);
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
@@ -10286,7 +10075,7 @@ static const per_sequence_t AddGrpC_MapData_addGrpC_sequence[] = {
 
 static int
 dissect_AddGrpC_MapData_addGrpC(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 361 "./asn1/its/its.cnf"
+#line 362 "./asn1/its/its.cnf"
   actx->private_data = wmem_new0(wmem_packet_scope(), its_private_data_t);
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
@@ -10303,7 +10092,7 @@ static const per_sequence_t AddGrpC_Position3D_addGrpC_sequence[] = {
 
 static int
 dissect_AddGrpC_Position3D_addGrpC(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 366 "./asn1/its/its.cnf"
+#line 367 "./asn1/its/its.cnf"
   actx->private_data = wmem_new0(wmem_packet_scope(), its_private_data_t);
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
@@ -10340,7 +10129,7 @@ static const per_sequence_t AddGrpC_RestrictionUserType_addGrpC_sequence[] = {
 
 static int
 dissect_AddGrpC_RestrictionUserType_addGrpC(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 371 "./asn1/its/its.cnf"
+#line 372 "./asn1/its/its.cnf"
   actx->private_data = wmem_new0(wmem_packet_scope(), its_private_data_t);
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
@@ -10357,7 +10146,7 @@ static const per_sequence_t AddGrpC_SignalStatusPackage_addGrpC_sequence[] = {
 
 static int
 dissect_AddGrpC_SignalStatusPackage_addGrpC(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 376 "./asn1/its/its.cnf"
+#line 377 "./asn1/its/its.cnf"
   actx->private_data = wmem_new0(wmem_packet_scope(), its_private_data_t);
 
   offset = dissect_per_sequence(tvb, offset, actx, tree, hf_index,
@@ -10450,6 +10239,9 @@ static int dissect_AddGrpC_SignalStatusPackage_addGrpC_PDU(tvbuff_t *tvb _U_, pa
 
 
 /* --- Module SSEM-PDU-Descriptions --- --- ---                               */
+
+
+/* --- Module RTCMEM-PDU-Descriptions --- --- ---                             */
 
 
 /* --- Module CAM-PDU-Descriptions --- --- ---                                */
@@ -10750,7 +10542,7 @@ static const per_sequence_t cam_CoopAwareness_sequence[] = {
 
 static int
 dissect_cam_CoopAwareness(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 272 "./asn1/its/its.cnf"
+#line 273 "./asn1/its/its.cnf"
   actx->private_data = (void*)wmem_new0(wmem_packet_scope(), its_private_data_t);
   col_set_str(actx->pinfo->cinfo, COL_PROTOCOL, "CAM");
   col_set_str(actx->pinfo->cinfo, COL_INFO, "CAM");
@@ -10958,7 +10750,7 @@ static const per_sequence_t denm_DecentralizedEnvironmentalNotificationMessage_s
 
 static int
 dissect_denm_DecentralizedEnvironmentalNotificationMessage(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 278 "./asn1/its/its.cnf"
+#line 279 "./asn1/its/its.cnf"
   actx->private_data = (void*)wmem_new0(wmem_packet_scope(), its_private_data_t);
   col_set_str(actx->pinfo->cinfo, COL_PROTOCOL, "DENM");
   col_set_str(actx->pinfo->cinfo, COL_INFO, "DENM");
@@ -11017,27 +10809,18 @@ dissect_tistpg_CustomerContract(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *a
 }
 
 
+static const int * tistpg_TisProfile_bits[] = {
+  &hf_tistpg_TisProfile_reserved,
+  &hf_tistpg_TisProfile_profileOne,
+  &hf_tistpg_TisProfile_profileTwo,
+  &hf_tistpg_TisProfile_profileThree,
+  NULL
+};
 
 static int
 dissect_tistpg_TisProfile(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 724 "./asn1/its/its.cnf"
-  tvbuff_t *parameter_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     8, 8, FALSE, &parameter_tvb, NULL);
-
-  if (parameter_tvb) {
-    const gint *fields[] = { // CHECKED
-      &hf_tistpg_TisProfile_reserved,
-      &hf_tistpg_TisProfile_profileOne,
-      &hf_tistpg_TisProfile_profileTwo,
-      &hf_tistpg_TisProfile_profileThree,
-      NULL
-    };
-    proto_tree *subtree = proto_item_add_subtree(actx->created_item, ett_tistpg_TisProfile);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 0, 1, fields, ENC_BIG_ENDIAN);
-  }
-
-
+                                     8, 8, FALSE, tistpg_TisProfile_bits, 4, NULL, NULL);
 
   return offset;
 }
@@ -11161,27 +10944,18 @@ dissect_tistpg_TisTpgSNM_Management(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_
 }
 
 
+static const int * tistpg_TpgAutomation_bits[] = {
+  &hf_tistpg_TpgAutomation_fullAutomated,
+  &hf_tistpg_TpgAutomation_semiAutomated,
+  &hf_tistpg_TpgAutomation_manual,
+  &hf_tistpg_TpgAutomation_reserved,
+  NULL
+};
 
 static int
 dissect_tistpg_TpgAutomation(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 666 "./asn1/its/its.cnf"
-  tvbuff_t *parameter_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     4, 4, FALSE, &parameter_tvb, NULL);
-
-  if (parameter_tvb) {
-    const gint *fields[] = { // CHECKED
-      &hf_tistpg_TpgAutomation_fullAutomated,
-      &hf_tistpg_TpgAutomation_semiAutomated,
-      &hf_tistpg_TpgAutomation_manual,
-      &hf_tistpg_TpgAutomation_reserved,
-      NULL
-    };
-    proto_tree *subtree = proto_item_add_subtree(actx->created_item, ett_tistpg_TpgAutomation);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 0, 1, fields, ENC_BIG_ENDIAN);
-  }
-
-
+                                     4, 4, FALSE, tistpg_TpgAutomation_bits, 4, NULL, NULL);
 
   return offset;
 }
@@ -11546,7 +11320,7 @@ dissect_tistpg_TisTpgVDRM(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U
 static int
 dissect_tistpg_Language(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     10, 10, FALSE, NULL, NULL);
+                                     10, 10, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -11603,7 +11377,7 @@ dissect_tistpg_TyreSetVariantID(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *a
 static int
 dissect_tistpg_TyreSidewallInformation(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     60, 60, FALSE, NULL, NULL);
+                                     60, 60, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -11613,7 +11387,7 @@ dissect_tistpg_TyreSidewallInformation(tvbuff_t *tvb _U_, int offset _U_, asn1_c
 static int
 dissect_tistpg_PressureConfiguration(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     9, 9, FALSE, NULL, NULL);
+                                     9, 9, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -11852,7 +11626,7 @@ dissect_tistpg_T_recommendedTyrePressure(tvbuff_t *tvb _U_, int offset _U_, asn1
 static int
 dissect_tistpg_TIN(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     64, 64, FALSE, NULL, NULL);
+                                     64, 64, FALSE, NULL, 0, NULL, NULL);
 
   return offset;
 }
@@ -12080,7 +11854,7 @@ static const per_choice_t tistpg_TisTpgTransaction_choice[] = {
 
 static int
 dissect_tistpg_TisTpgTransaction(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 296 "./asn1/its/its.cnf"
+#line 297 "./asn1/its/its.cnf"
   actx->private_data = (void*)wmem_new0(wmem_packet_scope(), its_private_data_t);
   col_set_str(actx->pinfo->cinfo, COL_PROTOCOL, "TISTPG");
   col_set_str(actx->pinfo->cinfo, COL_INFO, "TISTPG");
@@ -12182,34 +11956,29 @@ dissect_evcsn_NumericString_SIZE_1_16(tvbuff_t *tvb _U_, int offset _U_, asn1_ct
 }
 
 
+static const int * evcsn_ChargingSpotType_bits[] = {
+  &hf_evcsn_ChargingSpotType_standardChargeMode1,
+  &hf_evcsn_ChargingSpotType_standardChargeMode2,
+  &hf_evcsn_ChargingSpotType_standardOrFastChargeMode3,
+  &hf_evcsn_ChargingSpotType_fastChargeWithExternalCharger,
+  &hf_evcsn_ChargingSpotType_spare_bit4,
+  &hf_evcsn_ChargingSpotType_spare_bit5,
+  &hf_evcsn_ChargingSpotType_spare_bit6,
+  &hf_evcsn_ChargingSpotType_spare_bit7,
+  &hf_evcsn_ChargingSpotType_quickDrop,
+  &hf_evcsn_ChargingSpotType_spare_bit9,
+  &hf_evcsn_ChargingSpotType_spare_bit10,
+  &hf_evcsn_ChargingSpotType_spare_bit11,
+  &hf_evcsn_ChargingSpotType_inductiveChargeWhileStationary,
+  &hf_evcsn_ChargingSpotType_spare_bit13,
+  &hf_evcsn_ChargingSpotType_inductiveChargeWhileDriving,
+  NULL
+};
 
 static int
 dissect_evcsn_ChargingSpotType(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 616 "./asn1/its/its.cnf"
-  tvbuff_t *parameter_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     NO_BOUND, NO_BOUND, FALSE, &parameter_tvb, NULL);
-
-  if (parameter_tvb) {
-    const gint *fields0[] = { // CHECKED
-      &hf_evcsn_ChargingSpotType_standardChargeMode1,
-      &hf_evcsn_ChargingSpotType_standardChargeMode2,
-      &hf_evcsn_ChargingSpotType_standardOrFastChargeMode3,
-      &hf_evcsn_ChargingSpotType_fastChargeWithExternalCharger,
-      NULL
-    };
-    const gint *fields1[] = { // CHECKED
-      &hf_evcsn_ChargingSpotType_quickDrop,
-      &hf_evcsn_ChargingSpotType_inductiveChargeWhileStationary,
-      &hf_evcsn_ChargingSpotType_inductiveChargeWhileDriving,
-      NULL
-    };
-    proto_tree *subtree = proto_item_add_subtree(actx->created_item, ett_evcsn_ChargingSpotType);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 0, 1, fields0, ENC_BIG_ENDIAN);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 1, 1, fields1, ENC_BIG_ENDIAN);
-  }
-
-
+                                     NO_BOUND, NO_BOUND, FALSE, evcsn_ChargingSpotType_bits, 15, NULL, NULL);
 
   return offset;
 }
@@ -12218,11 +11987,11 @@ dissect_evcsn_ChargingSpotType(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *ac
 
 static int
 dissect_evcsn_TypeOfReceptacle(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 1113 "./asn1/its/its.cnf"
+#line 619 "./asn1/its/its.cnf"
   tvbuff_t *parameter_tvb = NULL;
   int len;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     NO_BOUND, NO_BOUND, FALSE, &parameter_tvb, &len);
+                                     NO_BOUND, NO_BOUND, FALSE, NULL, 0, &parameter_tvb, &len);
 
   /* TODO Provide values?
    * See ETSI TS 101 556-1 V1.1.1 Annex B Description for data elements
@@ -12392,7 +12161,7 @@ static const per_sequence_t evcsn_EVChargingSpotNotificationPOIMessage_sequence[
 
 static int
 dissect_evcsn_EVChargingSpotNotificationPOIMessage(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 284 "./asn1/its/its.cnf"
+#line 285 "./asn1/its/its.cnf"
   actx->private_data = (void*)wmem_new0(wmem_packet_scope(), its_private_data_t);
   col_set_str(actx->pinfo->cinfo, COL_PROTOCOL, "EVCSN");
   col_set_str(actx->pinfo->cinfo, COL_INFO, "EVCSN");
@@ -12562,25 +12331,16 @@ dissect_evrsr_AvailabilityStatus(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *
 }
 
 
+static const int * evrsr_SupportedPaymentTypes_bits[] = {
+  &hf_evrsr_SupportedPaymentTypes_contract,
+  &hf_evrsr_SupportedPaymentTypes_externalIdentification,
+  NULL
+};
 
 static int
 dissect_evrsr_SupportedPaymentTypes(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 638 "./asn1/its/its.cnf"
-  tvbuff_t *parameter_tvb = NULL;
   offset = dissect_per_bit_string(tvb, offset, actx, tree, hf_index,
-                                     2, 2, FALSE, &parameter_tvb, NULL);
-
-  if (parameter_tvb) {
-    const gint *fields[] = { // CHECKED
-      &hf_evrsr_SupportedPaymentTypes_contract,
-      &hf_evrsr_SupportedPaymentTypes_externalIdentification,
-      NULL
-    };
-    proto_tree *subtree = proto_item_add_subtree(actx->created_item, ett_evrsr_SupportedPaymentTypes);
-    proto_tree_add_bitmask_list(subtree, parameter_tvb, 0, 1, fields, ENC_BIG_ENDIAN);
-  }
-
-
+                                     2, 2, FALSE, evrsr_SupportedPaymentTypes_bits, 2, NULL, NULL);
 
   return offset;
 }
@@ -12905,7 +12665,7 @@ static const per_choice_t evrsr_EV_RSR_MessageBody_choice[] = {
 
 static int
 dissect_evrsr_EV_RSR_MessageBody(tvbuff_t *tvb _U_, int offset _U_, asn1_ctx_t *actx _U_, proto_tree *tree _U_, int hf_index _U_) {
-#line 290 "./asn1/its/its.cnf"
+#line 291 "./asn1/its/its.cnf"
   actx->private_data = (void*)wmem_new0(wmem_packet_scope(), its_private_data_t);
   col_set_str(actx->pinfo->cinfo, COL_PROTOCOL, "EV-RSR");
   col_set_str(actx->pinfo->cinfo, COL_INFO, "EV-RSR");
@@ -12930,7 +12690,7 @@ static int dissect_evrsr_EV_RSR_MessageBody_PDU(tvbuff_t *tvb _U_, packet_info *
 
 
 /*--- End of included file: packet-its-fn.c ---*/
-#line 343 "./asn1/its/packet-its-template.c"
+#line 346 "./asn1/its/packet-its-template.c"
 
 static int
 dissect_its_PDU(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data)
@@ -13265,203 +13025,203 @@ void proto_register_its(void)
         FT_NONE, BASE_NONE, NULL, 0,
         NULL, HFILL }},
     { &hf_its_AccelerationControl_brakePedalEngaged,
-      { "brakePedalEngaged", "its.brakePedalEngaged",
+      { "brakePedalEngaged", "its.AccelerationControl.brakePedalEngaged",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_its_AccelerationControl_gasPedalEngaged,
-      { "gasPedalEngaged", "its.gasPedalEngaged",
+      { "gasPedalEngaged", "its.AccelerationControl.gasPedalEngaged",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_its_AccelerationControl_emergencyBrakeEngaged,
-      { "emergencyBrakeEngaged", "its.emergencyBrakeEngaged",
+      { "emergencyBrakeEngaged", "its.AccelerationControl.emergencyBrakeEngaged",
         FT_BOOLEAN, 8, NULL, 0x20,
         NULL, HFILL }},
     { &hf_its_AccelerationControl_collisionWarningEngaged,
-      { "collisionWarningEngaged", "its.collisionWarningEngaged",
+      { "collisionWarningEngaged", "its.AccelerationControl.collisionWarningEngaged",
         FT_BOOLEAN, 8, NULL, 0x10,
         NULL, HFILL }},
     { &hf_its_AccelerationControl_accEngaged,
-      { "accEngaged", "its.accEngaged",
+      { "accEngaged", "its.AccelerationControl.accEngaged",
         FT_BOOLEAN, 8, NULL, 0x08,
         NULL, HFILL }},
     { &hf_its_AccelerationControl_cruiseControlEngaged,
-      { "cruiseControlEngaged", "its.cruiseControlEngaged",
+      { "cruiseControlEngaged", "its.AccelerationControl.cruiseControlEngaged",
         FT_BOOLEAN, 8, NULL, 0x04,
         NULL, HFILL }},
     { &hf_its_AccelerationControl_speedLimiterEngaged,
-      { "speedLimiterEngaged", "its.speedLimiterEngaged",
+      { "speedLimiterEngaged", "its.AccelerationControl.speedLimiterEngaged",
         FT_BOOLEAN, 8, NULL, 0x02,
         NULL, HFILL }},
     { &hf_its_ExteriorLights_lowBeamHeadlightsOn,
-      { "lowBeamHeadlightsOn", "its.lowBeamHeadlightsOn",
+      { "lowBeamHeadlightsOn", "its.ExteriorLights.lowBeamHeadlightsOn",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_its_ExteriorLights_highBeamHeadlightsOn,
-      { "highBeamHeadlightsOn", "its.highBeamHeadlightsOn",
+      { "highBeamHeadlightsOn", "its.ExteriorLights.highBeamHeadlightsOn",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_its_ExteriorLights_leftTurnSignalOn,
-      { "leftTurnSignalOn", "its.leftTurnSignalOn",
+      { "leftTurnSignalOn", "its.ExteriorLights.leftTurnSignalOn",
         FT_BOOLEAN, 8, NULL, 0x20,
         NULL, HFILL }},
     { &hf_its_ExteriorLights_rightTurnSignalOn,
-      { "rightTurnSignalOn", "its.rightTurnSignalOn",
+      { "rightTurnSignalOn", "its.ExteriorLights.rightTurnSignalOn",
         FT_BOOLEAN, 8, NULL, 0x10,
         NULL, HFILL }},
     { &hf_its_ExteriorLights_daytimeRunningLightsOn,
-      { "daytimeRunningLightsOn", "its.daytimeRunningLightsOn",
+      { "daytimeRunningLightsOn", "its.ExteriorLights.daytimeRunningLightsOn",
         FT_BOOLEAN, 8, NULL, 0x08,
         NULL, HFILL }},
     { &hf_its_ExteriorLights_reverseLightOn,
-      { "reverseLightOn", "its.reverseLightOn",
+      { "reverseLightOn", "its.ExteriorLights.reverseLightOn",
         FT_BOOLEAN, 8, NULL, 0x04,
         NULL, HFILL }},
     { &hf_its_ExteriorLights_fogLightOn,
-      { "fogLightOn", "its.fogLightOn",
+      { "fogLightOn", "its.ExteriorLights.fogLightOn",
         FT_BOOLEAN, 8, NULL, 0x02,
         NULL, HFILL }},
     { &hf_its_ExteriorLights_parkingLightsOn,
-      { "parkingLightsOn", "its.parkingLightsOn",
+      { "parkingLightsOn", "its.ExteriorLights.parkingLightsOn",
         FT_BOOLEAN, 8, NULL, 0x01,
         NULL, HFILL }},
     { &hf_its_SpecialTransportType_heavyLoad,
-      { "heavyLoad", "its.heavyLoad",
+      { "heavyLoad", "its.SpecialTransportType.heavyLoad",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_its_SpecialTransportType_excessWidth,
-      { "excessWidth", "its.excessWidth",
+      { "excessWidth", "its.SpecialTransportType.excessWidth",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_its_SpecialTransportType_excessLength,
-      { "excessLength", "its.excessLength",
+      { "excessLength", "its.SpecialTransportType.excessLength",
         FT_BOOLEAN, 8, NULL, 0x20,
         NULL, HFILL }},
     { &hf_its_SpecialTransportType_excessHeight,
-      { "excessHeight", "its.excessHeight",
+      { "excessHeight", "its.SpecialTransportType.excessHeight",
         FT_BOOLEAN, 8, NULL, 0x10,
         NULL, HFILL }},
     { &hf_its_LightBarSirenInUse_lightBarActivated,
-      { "lightBarActivated", "its.lightBarActivated",
+      { "lightBarActivated", "its.LightBarSirenInUse.lightBarActivated",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_its_LightBarSirenInUse_sirenActivated,
-      { "sirenActivated", "its.sirenActivated",
+      { "sirenActivated", "its.LightBarSirenInUse.sirenActivated",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_its_PositionOfOccupants_row1LeftOccupied,
-      { "row1LeftOccupied", "its.row1LeftOccupied",
+      { "row1LeftOccupied", "its.PositionOfOccupants.row1LeftOccupied",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_its_PositionOfOccupants_row1RightOccupied,
-      { "row1RightOccupied", "its.row1RightOccupied",
+      { "row1RightOccupied", "its.PositionOfOccupants.row1RightOccupied",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_its_PositionOfOccupants_row1MidOccupied,
-      { "row1MidOccupied", "its.row1MidOccupied",
+      { "row1MidOccupied", "its.PositionOfOccupants.row1MidOccupied",
         FT_BOOLEAN, 8, NULL, 0x20,
         NULL, HFILL }},
     { &hf_its_PositionOfOccupants_row1NotDetectable,
-      { "row1NotDetectable", "its.row1NotDetectable",
+      { "row1NotDetectable", "its.PositionOfOccupants.row1NotDetectable",
         FT_BOOLEAN, 8, NULL, 0x10,
         NULL, HFILL }},
     { &hf_its_PositionOfOccupants_row1NotPresent,
-      { "row1NotPresent", "its.row1NotPresent",
+      { "row1NotPresent", "its.PositionOfOccupants.row1NotPresent",
         FT_BOOLEAN, 8, NULL, 0x08,
         NULL, HFILL }},
     { &hf_its_PositionOfOccupants_row2LeftOccupied,
-      { "row2LeftOccupied", "its.row2LeftOccupied",
+      { "row2LeftOccupied", "its.PositionOfOccupants.row2LeftOccupied",
         FT_BOOLEAN, 8, NULL, 0x04,
         NULL, HFILL }},
     { &hf_its_PositionOfOccupants_row2RightOccupied,
-      { "row2RightOccupied", "its.row2RightOccupied",
+      { "row2RightOccupied", "its.PositionOfOccupants.row2RightOccupied",
         FT_BOOLEAN, 8, NULL, 0x02,
         NULL, HFILL }},
     { &hf_its_PositionOfOccupants_row2MidOccupied,
-      { "row2MidOccupied", "its.row2MidOccupied",
+      { "row2MidOccupied", "its.PositionOfOccupants.row2MidOccupied",
         FT_BOOLEAN, 8, NULL, 0x01,
         NULL, HFILL }},
     { &hf_its_PositionOfOccupants_row2NotDetectable,
-      { "row2NotDetectable", "its.row2NotDetectable",
+      { "row2NotDetectable", "its.PositionOfOccupants.row2NotDetectable",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_its_PositionOfOccupants_row2NotPresent,
-      { "row2NotPresent", "its.row2NotPresent",
+      { "row2NotPresent", "its.PositionOfOccupants.row2NotPresent",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_its_PositionOfOccupants_row3LeftOccupied,
-      { "row3LeftOccupied", "its.row3LeftOccupied",
+      { "row3LeftOccupied", "its.PositionOfOccupants.row3LeftOccupied",
         FT_BOOLEAN, 8, NULL, 0x20,
         NULL, HFILL }},
     { &hf_its_PositionOfOccupants_row3RightOccupied,
-      { "row3RightOccupied", "its.row3RightOccupied",
+      { "row3RightOccupied", "its.PositionOfOccupants.row3RightOccupied",
         FT_BOOLEAN, 8, NULL, 0x10,
         NULL, HFILL }},
     { &hf_its_PositionOfOccupants_row3MidOccupied,
-      { "row3MidOccupied", "its.row3MidOccupied",
+      { "row3MidOccupied", "its.PositionOfOccupants.row3MidOccupied",
         FT_BOOLEAN, 8, NULL, 0x08,
         NULL, HFILL }},
     { &hf_its_PositionOfOccupants_row3NotDetectable,
-      { "row3NotDetectable", "its.row3NotDetectable",
+      { "row3NotDetectable", "its.PositionOfOccupants.row3NotDetectable",
         FT_BOOLEAN, 8, NULL, 0x04,
         NULL, HFILL }},
     { &hf_its_PositionOfOccupants_row3NotPresent,
-      { "row3NotPresent", "its.row3NotPresent",
+      { "row3NotPresent", "its.PositionOfOccupants.row3NotPresent",
         FT_BOOLEAN, 8, NULL, 0x02,
         NULL, HFILL }},
     { &hf_its_PositionOfOccupants_row4LeftOccupied,
-      { "row4LeftOccupied", "its.row4LeftOccupied",
+      { "row4LeftOccupied", "its.PositionOfOccupants.row4LeftOccupied",
         FT_BOOLEAN, 8, NULL, 0x01,
         NULL, HFILL }},
     { &hf_its_PositionOfOccupants_row4RightOccupied,
-      { "row4RightOccupied", "its.row4RightOccupied",
+      { "row4RightOccupied", "its.PositionOfOccupants.row4RightOccupied",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_its_PositionOfOccupants_row4MidOccupied,
-      { "row4MidOccupied", "its.row4MidOccupied",
+      { "row4MidOccupied", "its.PositionOfOccupants.row4MidOccupied",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_its_PositionOfOccupants_row4NotDetectable,
-      { "row4NotDetectable", "its.row4NotDetectable",
+      { "row4NotDetectable", "its.PositionOfOccupants.row4NotDetectable",
         FT_BOOLEAN, 8, NULL, 0x20,
         NULL, HFILL }},
     { &hf_its_PositionOfOccupants_row4NotPresent,
-      { "row4NotPresent", "its.row4NotPresent",
+      { "row4NotPresent", "its.PositionOfOccupants.row4NotPresent",
         FT_BOOLEAN, 8, NULL, 0x10,
         NULL, HFILL }},
     { &hf_its_EnergyStorageType_hydrogenStorage,
-      { "hydrogenStorage", "its.hydrogenStorage",
+      { "hydrogenStorage", "its.EnergyStorageType.hydrogenStorage",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_its_EnergyStorageType_electricEnergyStorage,
-      { "electricEnergyStorage", "its.electricEnergyStorage",
+      { "electricEnergyStorage", "its.EnergyStorageType.electricEnergyStorage",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_its_EnergyStorageType_liquidPropaneGas,
-      { "liquidPropaneGas", "its.liquidPropaneGas",
+      { "liquidPropaneGas", "its.EnergyStorageType.liquidPropaneGas",
         FT_BOOLEAN, 8, NULL, 0x20,
         NULL, HFILL }},
     { &hf_its_EnergyStorageType_compressedNaturalGas,
-      { "compressedNaturalGas", "its.compressedNaturalGas",
+      { "compressedNaturalGas", "its.EnergyStorageType.compressedNaturalGas",
         FT_BOOLEAN, 8, NULL, 0x10,
         NULL, HFILL }},
     { &hf_its_EnergyStorageType_diesel,
-      { "diesel", "its.diesel",
+      { "diesel", "its.EnergyStorageType.diesel",
         FT_BOOLEAN, 8, NULL, 0x08,
         NULL, HFILL }},
     { &hf_its_EnergyStorageType_gasoline,
-      { "gasoline", "its.gasoline",
+      { "gasoline", "its.EnergyStorageType.gasoline",
         FT_BOOLEAN, 8, NULL, 0x04,
         NULL, HFILL }},
     { &hf_its_EnergyStorageType_ammonia,
-      { "ammonia", "its.ammonia",
+      { "ammonia", "its.EnergyStorageType.ammonia",
         FT_BOOLEAN, 8, NULL, 0x02,
         NULL, HFILL }},
     { &hf_its_EmergencyPriority_requestForRightOfWay,
-      { "requestForRightOfWay", "its.requestForRightOfWay",
+      { "requestForRightOfWay", "its.EmergencyPriority.requestForRightOfWay",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_its_EmergencyPriority_requestForFreeCrossingAtATrafficLight,
-      { "requestForFreeCrossingAtATrafficLight", "its.requestForFreeCrossingAtATrafficLight",
+      { "requestForFreeCrossingAtATrafficLight", "its.EmergencyPriority.requestForFreeCrossingAtATrafficLight",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
 
@@ -14513,51 +14273,51 @@ void proto_register_its(void)
         FT_STRING, BASE_NONE, NULL, 0,
         "UTF8String", HFILL }},
     { &hf_ivi_PMD_national_holiday,
-      { "national-holiday", "ivi.national-holiday",
+      { "national-holiday", "ivi.PMD.national.holiday",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_ivi_PMD_even_days,
-      { "even-days", "ivi.even-days",
+      { "even-days", "ivi.PMD.even.days",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_ivi_PMD_odd_days,
-      { "odd-days", "ivi.odd-days",
+      { "odd-days", "ivi.PMD.odd.days",
         FT_BOOLEAN, 8, NULL, 0x20,
         NULL, HFILL }},
     { &hf_ivi_PMD_market_day,
-      { "market-day", "ivi.market-day",
+      { "market-day", "ivi.PMD.market.day",
         FT_BOOLEAN, 8, NULL, 0x10,
         NULL, HFILL }},
     { &hf_ivi_DayOfWeek_unused,
-      { "unused", "ivi.unused",
+      { "unused", "ivi.DayOfWeek.unused",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_ivi_DayOfWeek_monday,
-      { "monday", "ivi.monday",
+      { "monday", "ivi.DayOfWeek.monday",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_ivi_DayOfWeek_tuesday,
-      { "tuesday", "ivi.tuesday",
+      { "tuesday", "ivi.DayOfWeek.tuesday",
         FT_BOOLEAN, 8, NULL, 0x20,
         NULL, HFILL }},
     { &hf_ivi_DayOfWeek_wednesday,
-      { "wednesday", "ivi.wednesday",
+      { "wednesday", "ivi.DayOfWeek.wednesday",
         FT_BOOLEAN, 8, NULL, 0x10,
         NULL, HFILL }},
     { &hf_ivi_DayOfWeek_thursday,
-      { "thursday", "ivi.thursday",
+      { "thursday", "ivi.DayOfWeek.thursday",
         FT_BOOLEAN, 8, NULL, 0x08,
         NULL, HFILL }},
     { &hf_ivi_DayOfWeek_friday,
-      { "friday", "ivi.friday",
+      { "friday", "ivi.DayOfWeek.friday",
         FT_BOOLEAN, 8, NULL, 0x04,
         NULL, HFILL }},
     { &hf_ivi_DayOfWeek_saturday,
-      { "saturday", "ivi.saturday",
+      { "saturday", "ivi.DayOfWeek.saturday",
         FT_BOOLEAN, 8, NULL, 0x02,
         NULL, HFILL }},
     { &hf_ivi_DayOfWeek_sunday,
-      { "sunday", "ivi.sunday",
+      { "sunday", "ivi.DayOfWeek.sunday",
         FT_BOOLEAN, 8, NULL, 0x01,
         NULL, HFILL }},
 
@@ -15576,403 +15336,403 @@ void proto_register_its(void)
         FT_UINT32, BASE_DEC, NULL, 0,
         NULL, HFILL }},
     { &hf_dsrc_LaneSharing_overlappingLaneDescriptionProvided,
-      { "overlappingLaneDescriptionProvided", "dsrc.overlappingLaneDescriptionProvided",
+      { "overlappingLaneDescriptionProvided", "dsrc.LaneSharing.overlappingLaneDescriptionProvided",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_dsrc_LaneSharing_multipleLanesTreatedAsOneLane,
-      { "multipleLanesTreatedAsOneLane", "dsrc.multipleLanesTreatedAsOneLane",
+      { "multipleLanesTreatedAsOneLane", "dsrc.LaneSharing.multipleLanesTreatedAsOneLane",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_dsrc_LaneSharing_otherNonMotorizedTrafficTypes,
-      { "otherNonMotorizedTrafficTypes", "dsrc.otherNonMotorizedTrafficTypes",
+      { "otherNonMotorizedTrafficTypes", "dsrc.LaneSharing.otherNonMotorizedTrafficTypes",
         FT_BOOLEAN, 8, NULL, 0x20,
         NULL, HFILL }},
     { &hf_dsrc_LaneSharing_individualMotorizedVehicleTraffic,
-      { "individualMotorizedVehicleTraffic", "dsrc.individualMotorizedVehicleTraffic",
+      { "individualMotorizedVehicleTraffic", "dsrc.LaneSharing.individualMotorizedVehicleTraffic",
         FT_BOOLEAN, 8, NULL, 0x10,
         NULL, HFILL }},
     { &hf_dsrc_LaneSharing_busVehicleTraffic,
-      { "busVehicleTraffic", "dsrc.busVehicleTraffic",
+      { "busVehicleTraffic", "dsrc.LaneSharing.busVehicleTraffic",
         FT_BOOLEAN, 8, NULL, 0x08,
         NULL, HFILL }},
     { &hf_dsrc_LaneSharing_taxiVehicleTraffic,
-      { "taxiVehicleTraffic", "dsrc.taxiVehicleTraffic",
+      { "taxiVehicleTraffic", "dsrc.LaneSharing.taxiVehicleTraffic",
         FT_BOOLEAN, 8, NULL, 0x04,
         NULL, HFILL }},
     { &hf_dsrc_LaneSharing_pedestriansTraffic,
-      { "pedestriansTraffic", "dsrc.pedestriansTraffic",
+      { "pedestriansTraffic", "dsrc.LaneSharing.pedestriansTraffic",
         FT_BOOLEAN, 8, NULL, 0x02,
         NULL, HFILL }},
     { &hf_dsrc_LaneSharing_cyclistVehicleTraffic,
-      { "cyclistVehicleTraffic", "dsrc.cyclistVehicleTraffic",
+      { "cyclistVehicleTraffic", "dsrc.LaneSharing.cyclistVehicleTraffic",
         FT_BOOLEAN, 8, NULL, 0x01,
         NULL, HFILL }},
     { &hf_dsrc_LaneSharing_trackedVehicleTraffic,
-      { "trackedVehicleTraffic", "dsrc.trackedVehicleTraffic",
+      { "trackedVehicleTraffic", "dsrc.LaneSharing.trackedVehicleTraffic",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_dsrc_LaneSharing_pedestrianTraffic,
-      { "pedestrianTraffic", "dsrc.pedestrianTraffic",
+      { "pedestrianTraffic", "dsrc.LaneSharing.pedestrianTraffic",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_dsrc_AllowedManeuvers_maneuverStraightAllowed,
-      { "maneuverStraightAllowed", "dsrc.maneuverStraightAllowed",
+      { "maneuverStraightAllowed", "dsrc.AllowedManeuvers.maneuverStraightAllowed",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_dsrc_AllowedManeuvers_maneuverLeftAllowed,
-      { "maneuverLeftAllowed", "dsrc.maneuverLeftAllowed",
+      { "maneuverLeftAllowed", "dsrc.AllowedManeuvers.maneuverLeftAllowed",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_dsrc_AllowedManeuvers_maneuverRightAllowed,
-      { "maneuverRightAllowed", "dsrc.maneuverRightAllowed",
+      { "maneuverRightAllowed", "dsrc.AllowedManeuvers.maneuverRightAllowed",
         FT_BOOLEAN, 8, NULL, 0x20,
         NULL, HFILL }},
     { &hf_dsrc_AllowedManeuvers_maneuverUTurnAllowed,
-      { "maneuverUTurnAllowed", "dsrc.maneuverUTurnAllowed",
+      { "maneuverUTurnAllowed", "dsrc.AllowedManeuvers.maneuverUTurnAllowed",
         FT_BOOLEAN, 8, NULL, 0x10,
         NULL, HFILL }},
     { &hf_dsrc_AllowedManeuvers_maneuverLeftTurnOnRedAllowed,
-      { "maneuverLeftTurnOnRedAllowed", "dsrc.maneuverLeftTurnOnRedAllowed",
+      { "maneuverLeftTurnOnRedAllowed", "dsrc.AllowedManeuvers.maneuverLeftTurnOnRedAllowed",
         FT_BOOLEAN, 8, NULL, 0x08,
         NULL, HFILL }},
     { &hf_dsrc_AllowedManeuvers_maneuverRightTurnOnRedAllowed,
-      { "maneuverRightTurnOnRedAllowed", "dsrc.maneuverRightTurnOnRedAllowed",
+      { "maneuverRightTurnOnRedAllowed", "dsrc.AllowedManeuvers.maneuverRightTurnOnRedAllowed",
         FT_BOOLEAN, 8, NULL, 0x04,
         NULL, HFILL }},
     { &hf_dsrc_AllowedManeuvers_maneuverLaneChangeAllowed,
-      { "maneuverLaneChangeAllowed", "dsrc.maneuverLaneChangeAllowed",
+      { "maneuverLaneChangeAllowed", "dsrc.AllowedManeuvers.maneuverLaneChangeAllowed",
         FT_BOOLEAN, 8, NULL, 0x02,
         NULL, HFILL }},
     { &hf_dsrc_AllowedManeuvers_maneuverNoStoppingAllowed,
-      { "maneuverNoStoppingAllowed", "dsrc.maneuverNoStoppingAllowed",
+      { "maneuverNoStoppingAllowed", "dsrc.AllowedManeuvers.maneuverNoStoppingAllowed",
         FT_BOOLEAN, 8, NULL, 0x01,
         NULL, HFILL }},
     { &hf_dsrc_AllowedManeuvers_yieldAllwaysRequired,
-      { "yieldAllwaysRequired", "dsrc.yieldAllwaysRequired",
+      { "yieldAllwaysRequired", "dsrc.AllowedManeuvers.yieldAllwaysRequired",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_dsrc_AllowedManeuvers_goWithHalt,
-      { "goWithHalt", "dsrc.goWithHalt",
+      { "goWithHalt", "dsrc.AllowedManeuvers.goWithHalt",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_dsrc_AllowedManeuvers_caution,
-      { "caution", "dsrc.caution",
+      { "caution", "dsrc.AllowedManeuvers.caution",
         FT_BOOLEAN, 8, NULL, 0x20,
         NULL, HFILL }},
     { &hf_dsrc_AllowedManeuvers_reserved1,
-      { "reserved1", "dsrc.reserved1",
+      { "reserved1", "dsrc.AllowedManeuvers.reserved1",
         FT_BOOLEAN, 8, NULL, 0x10,
         NULL, HFILL }},
     { &hf_dsrc_IntersectionStatusObject_manualControlIsEnabled,
-      { "manualControlIsEnabled", "dsrc.manualControlIsEnabled",
+      { "manualControlIsEnabled", "dsrc.IntersectionStatusObject.manualControlIsEnabled",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_dsrc_IntersectionStatusObject_stopTimeIsActivated,
-      { "stopTimeIsActivated", "dsrc.stopTimeIsActivated",
+      { "stopTimeIsActivated", "dsrc.IntersectionStatusObject.stopTimeIsActivated",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_dsrc_IntersectionStatusObject_failureFlash,
-      { "failureFlash", "dsrc.failureFlash",
+      { "failureFlash", "dsrc.IntersectionStatusObject.failureFlash",
         FT_BOOLEAN, 8, NULL, 0x20,
         NULL, HFILL }},
     { &hf_dsrc_IntersectionStatusObject_preemptIsActive,
-      { "preemptIsActive", "dsrc.preemptIsActive",
+      { "preemptIsActive", "dsrc.IntersectionStatusObject.preemptIsActive",
         FT_BOOLEAN, 8, NULL, 0x10,
         NULL, HFILL }},
     { &hf_dsrc_IntersectionStatusObject_signalPriorityIsActive,
-      { "signalPriorityIsActive", "dsrc.signalPriorityIsActive",
+      { "signalPriorityIsActive", "dsrc.IntersectionStatusObject.signalPriorityIsActive",
         FT_BOOLEAN, 8, NULL, 0x08,
         NULL, HFILL }},
     { &hf_dsrc_IntersectionStatusObject_fixedTimeOperation,
-      { "fixedTimeOperation", "dsrc.fixedTimeOperation",
+      { "fixedTimeOperation", "dsrc.IntersectionStatusObject.fixedTimeOperation",
         FT_BOOLEAN, 8, NULL, 0x04,
         NULL, HFILL }},
     { &hf_dsrc_IntersectionStatusObject_trafficDependentOperation,
-      { "trafficDependentOperation", "dsrc.trafficDependentOperation",
+      { "trafficDependentOperation", "dsrc.IntersectionStatusObject.trafficDependentOperation",
         FT_BOOLEAN, 8, NULL, 0x02,
         NULL, HFILL }},
     { &hf_dsrc_IntersectionStatusObject_standbyOperation,
-      { "standbyOperation", "dsrc.standbyOperation",
+      { "standbyOperation", "dsrc.IntersectionStatusObject.standbyOperation",
         FT_BOOLEAN, 8, NULL, 0x01,
         NULL, HFILL }},
     { &hf_dsrc_IntersectionStatusObject_failureMode,
-      { "failureMode", "dsrc.failureMode",
+      { "failureMode", "dsrc.IntersectionStatusObject.failureMode",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_dsrc_IntersectionStatusObject_off,
-      { "off", "dsrc.off",
+      { "off", "dsrc.IntersectionStatusObject.off",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_dsrc_IntersectionStatusObject_recentMAPmessageUpdate,
-      { "recentMAPmessageUpdate", "dsrc.recentMAPmessageUpdate",
+      { "recentMAPmessageUpdate", "dsrc.IntersectionStatusObject.recentMAPmessageUpdate",
         FT_BOOLEAN, 8, NULL, 0x20,
         NULL, HFILL }},
     { &hf_dsrc_IntersectionStatusObject_recentChangeInMAPassignedLanesIDsUsed,
-      { "recentChangeInMAPassignedLanesIDsUsed", "dsrc.recentChangeInMAPassignedLanesIDsUsed",
+      { "recentChangeInMAPassignedLanesIDsUsed", "dsrc.IntersectionStatusObject.recentChangeInMAPassignedLanesIDsUsed",
         FT_BOOLEAN, 8, NULL, 0x10,
         NULL, HFILL }},
     { &hf_dsrc_IntersectionStatusObject_noValidMAPisAvailableAtThisTime,
-      { "noValidMAPisAvailableAtThisTime", "dsrc.noValidMAPisAvailableAtThisTime",
+      { "noValidMAPisAvailableAtThisTime", "dsrc.IntersectionStatusObject.noValidMAPisAvailableAtThisTime",
         FT_BOOLEAN, 8, NULL, 0x08,
         NULL, HFILL }},
     { &hf_dsrc_IntersectionStatusObject_noValidSPATisAvailableAtThisTime,
-      { "noValidSPATisAvailableAtThisTime", "dsrc.noValidSPATisAvailableAtThisTime",
+      { "noValidSPATisAvailableAtThisTime", "dsrc.IntersectionStatusObject.noValidSPATisAvailableAtThisTime",
         FT_BOOLEAN, 8, NULL, 0x04,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Barrier_median_RevocableLane,
-      { "median-RevocableLane", "dsrc.median-RevocableLane",
+      { "median-RevocableLane", "dsrc.LaneAttributes.Barrier.median.RevocableLane",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Barrier_median,
-      { "median", "dsrc.median",
+      { "median", "dsrc.LaneAttributes.Barrier.median",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Barrier_whiteLineHashing,
-      { "whiteLineHashing", "dsrc.whiteLineHashing",
+      { "whiteLineHashing", "dsrc.LaneAttributes.Barrier.whiteLineHashing",
         FT_BOOLEAN, 8, NULL, 0x20,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Barrier_stripedLines,
-      { "stripedLines", "dsrc.stripedLines",
+      { "stripedLines", "dsrc.LaneAttributes.Barrier.stripedLines",
         FT_BOOLEAN, 8, NULL, 0x10,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Barrier_doubleStripedLines,
-      { "doubleStripedLines", "dsrc.doubleStripedLines",
+      { "doubleStripedLines", "dsrc.LaneAttributes.Barrier.doubleStripedLines",
         FT_BOOLEAN, 8, NULL, 0x08,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Barrier_trafficCones,
-      { "trafficCones", "dsrc.trafficCones",
+      { "trafficCones", "dsrc.LaneAttributes.Barrier.trafficCones",
         FT_BOOLEAN, 8, NULL, 0x04,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Barrier_constructionBarrier,
-      { "constructionBarrier", "dsrc.constructionBarrier",
+      { "constructionBarrier", "dsrc.LaneAttributes.Barrier.constructionBarrier",
         FT_BOOLEAN, 8, NULL, 0x02,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Barrier_trafficChannels,
-      { "trafficChannels", "dsrc.trafficChannels",
+      { "trafficChannels", "dsrc.LaneAttributes.Barrier.trafficChannels",
         FT_BOOLEAN, 8, NULL, 0x01,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Barrier_lowCurbs,
-      { "lowCurbs", "dsrc.lowCurbs",
+      { "lowCurbs", "dsrc.LaneAttributes.Barrier.lowCurbs",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Barrier_highCurbs,
-      { "highCurbs", "dsrc.highCurbs",
+      { "highCurbs", "dsrc.LaneAttributes.Barrier.highCurbs",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Bike_bikeRevocableLane,
-      { "bikeRevocableLane", "dsrc.bikeRevocableLane",
+      { "bikeRevocableLane", "dsrc.LaneAttributes.Bike.bikeRevocableLane",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Bike_pedestrianUseAllowed,
-      { "pedestrianUseAllowed", "dsrc.pedestrianUseAllowed",
+      { "pedestrianUseAllowed", "dsrc.LaneAttributes.Bike.pedestrianUseAllowed",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Bike_isBikeFlyOverLane,
-      { "isBikeFlyOverLane", "dsrc.isBikeFlyOverLane",
+      { "isBikeFlyOverLane", "dsrc.LaneAttributes.Bike.isBikeFlyOverLane",
         FT_BOOLEAN, 8, NULL, 0x20,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Bike_fixedCycleTime,
-      { "fixedCycleTime", "dsrc.fixedCycleTime",
+      { "fixedCycleTime", "dsrc.LaneAttributes.Bike.fixedCycleTime",
         FT_BOOLEAN, 8, NULL, 0x10,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Bike_biDirectionalCycleTimes,
-      { "biDirectionalCycleTimes", "dsrc.biDirectionalCycleTimes",
+      { "biDirectionalCycleTimes", "dsrc.LaneAttributes.Bike.biDirectionalCycleTimes",
         FT_BOOLEAN, 8, NULL, 0x08,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Bike_isolatedByBarrier,
-      { "isolatedByBarrier", "dsrc.isolatedByBarrier",
+      { "isolatedByBarrier", "dsrc.LaneAttributes.Bike.isolatedByBarrier",
         FT_BOOLEAN, 8, NULL, 0x04,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Bike_unsignalizedSegmentsPresent,
-      { "unsignalizedSegmentsPresent", "dsrc.unsignalizedSegmentsPresent",
+      { "unsignalizedSegmentsPresent", "dsrc.LaneAttributes.Bike.unsignalizedSegmentsPresent",
         FT_BOOLEAN, 8, NULL, 0x02,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Crosswalk_crosswalkRevocableLane,
-      { "crosswalkRevocableLane", "dsrc.crosswalkRevocableLane",
+      { "crosswalkRevocableLane", "dsrc.LaneAttributes.Crosswalk.crosswalkRevocableLane",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Crosswalk_bicyleUseAllowed,
-      { "bicyleUseAllowed", "dsrc.bicyleUseAllowed",
+      { "bicyleUseAllowed", "dsrc.LaneAttributes.Crosswalk.bicyleUseAllowed",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Crosswalk_isXwalkFlyOverLane,
-      { "isXwalkFlyOverLane", "dsrc.isXwalkFlyOverLane",
+      { "isXwalkFlyOverLane", "dsrc.LaneAttributes.Crosswalk.isXwalkFlyOverLane",
         FT_BOOLEAN, 8, NULL, 0x20,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Crosswalk_fixedCycleTime,
-      { "fixedCycleTime", "dsrc.fixedCycleTime",
+      { "fixedCycleTime", "dsrc.LaneAttributes.Crosswalk.fixedCycleTime",
         FT_BOOLEAN, 8, NULL, 0x10,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Crosswalk_biDirectionalCycleTimes,
-      { "biDirectionalCycleTimes", "dsrc.biDirectionalCycleTimes",
+      { "biDirectionalCycleTimes", "dsrc.LaneAttributes.Crosswalk.biDirectionalCycleTimes",
         FT_BOOLEAN, 8, NULL, 0x08,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Crosswalk_hasPushToWalkButton,
-      { "hasPushToWalkButton", "dsrc.hasPushToWalkButton",
+      { "hasPushToWalkButton", "dsrc.LaneAttributes.Crosswalk.hasPushToWalkButton",
         FT_BOOLEAN, 8, NULL, 0x04,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Crosswalk_audioSupport,
-      { "audioSupport", "dsrc.audioSupport",
+      { "audioSupport", "dsrc.LaneAttributes.Crosswalk.audioSupport",
         FT_BOOLEAN, 8, NULL, 0x02,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Crosswalk_rfSignalRequestPresent,
-      { "rfSignalRequestPresent", "dsrc.rfSignalRequestPresent",
+      { "rfSignalRequestPresent", "dsrc.LaneAttributes.Crosswalk.rfSignalRequestPresent",
         FT_BOOLEAN, 8, NULL, 0x01,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Crosswalk_unsignalizedSegmentsPresent,
-      { "unsignalizedSegmentsPresent", "dsrc.unsignalizedSegmentsPresent",
+      { "unsignalizedSegmentsPresent", "dsrc.LaneAttributes.Crosswalk.unsignalizedSegmentsPresent",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Parking_parkingRevocableLane,
-      { "parkingRevocableLane", "dsrc.parkingRevocableLane",
+      { "parkingRevocableLane", "dsrc.LaneAttributes.Parking.parkingRevocableLane",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Parking_parallelParkingInUse,
-      { "parallelParkingInUse", "dsrc.parallelParkingInUse",
+      { "parallelParkingInUse", "dsrc.LaneAttributes.Parking.parallelParkingInUse",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Parking_headInParkingInUse,
-      { "headInParkingInUse", "dsrc.headInParkingInUse",
+      { "headInParkingInUse", "dsrc.LaneAttributes.Parking.headInParkingInUse",
         FT_BOOLEAN, 8, NULL, 0x20,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Parking_doNotParkZone,
-      { "doNotParkZone", "dsrc.doNotParkZone",
+      { "doNotParkZone", "dsrc.LaneAttributes.Parking.doNotParkZone",
         FT_BOOLEAN, 8, NULL, 0x10,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Parking_parkingForBusUse,
-      { "parkingForBusUse", "dsrc.parkingForBusUse",
+      { "parkingForBusUse", "dsrc.LaneAttributes.Parking.parkingForBusUse",
         FT_BOOLEAN, 8, NULL, 0x08,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Parking_parkingForTaxiUse,
-      { "parkingForTaxiUse", "dsrc.parkingForTaxiUse",
+      { "parkingForTaxiUse", "dsrc.LaneAttributes.Parking.parkingForTaxiUse",
         FT_BOOLEAN, 8, NULL, 0x04,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Parking_noPublicParkingUse,
-      { "noPublicParkingUse", "dsrc.noPublicParkingUse",
+      { "noPublicParkingUse", "dsrc.LaneAttributes.Parking.noPublicParkingUse",
         FT_BOOLEAN, 8, NULL, 0x02,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Sidewalk_sidewalk_RevocableLane,
-      { "sidewalk-RevocableLane", "dsrc.sidewalk-RevocableLane",
+      { "sidewalk-RevocableLane", "dsrc.LaneAttributes.Sidewalk.sidewalk.RevocableLane",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Sidewalk_bicyleUseAllowed,
-      { "bicyleUseAllowed", "dsrc.bicyleUseAllowed",
+      { "bicyleUseAllowed", "dsrc.LaneAttributes.Sidewalk.bicyleUseAllowed",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Sidewalk_isSidewalkFlyOverLane,
-      { "isSidewalkFlyOverLane", "dsrc.isSidewalkFlyOverLane",
+      { "isSidewalkFlyOverLane", "dsrc.LaneAttributes.Sidewalk.isSidewalkFlyOverLane",
         FT_BOOLEAN, 8, NULL, 0x20,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Sidewalk_walkBikes,
-      { "walkBikes", "dsrc.walkBikes",
+      { "walkBikes", "dsrc.LaneAttributes.Sidewalk.walkBikes",
         FT_BOOLEAN, 8, NULL, 0x10,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Striping_stripeToConnectingLanesRevocableLane,
-      { "stripeToConnectingLanesRevocableLane", "dsrc.stripeToConnectingLanesRevocableLane",
+      { "stripeToConnectingLanesRevocableLane", "dsrc.LaneAttributes.Striping.stripeToConnectingLanesRevocableLane",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Striping_stripeDrawOnLeft,
-      { "stripeDrawOnLeft", "dsrc.stripeDrawOnLeft",
+      { "stripeDrawOnLeft", "dsrc.LaneAttributes.Striping.stripeDrawOnLeft",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Striping_stripeDrawOnRight,
-      { "stripeDrawOnRight", "dsrc.stripeDrawOnRight",
+      { "stripeDrawOnRight", "dsrc.LaneAttributes.Striping.stripeDrawOnRight",
         FT_BOOLEAN, 8, NULL, 0x20,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Striping_stripeToConnectingLanesLeft,
-      { "stripeToConnectingLanesLeft", "dsrc.stripeToConnectingLanesLeft",
+      { "stripeToConnectingLanesLeft", "dsrc.LaneAttributes.Striping.stripeToConnectingLanesLeft",
         FT_BOOLEAN, 8, NULL, 0x10,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Striping_stripeToConnectingLanesRight,
-      { "stripeToConnectingLanesRight", "dsrc.stripeToConnectingLanesRight",
+      { "stripeToConnectingLanesRight", "dsrc.LaneAttributes.Striping.stripeToConnectingLanesRight",
         FT_BOOLEAN, 8, NULL, 0x08,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Striping_stripeToConnectingLanesAhead,
-      { "stripeToConnectingLanesAhead", "dsrc.stripeToConnectingLanesAhead",
+      { "stripeToConnectingLanesAhead", "dsrc.LaneAttributes.Striping.stripeToConnectingLanesAhead",
         FT_BOOLEAN, 8, NULL, 0x04,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_TrackedVehicle_spec_RevocableLane,
-      { "spec-RevocableLane", "dsrc.spec-RevocableLane",
+      { "spec-RevocableLane", "dsrc.LaneAttributes.TrackedVehicle.spec.RevocableLane",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_TrackedVehicle_spec_commuterRailRoadTrack,
-      { "spec-commuterRailRoadTrack", "dsrc.spec-commuterRailRoadTrack",
+      { "spec-commuterRailRoadTrack", "dsrc.LaneAttributes.TrackedVehicle.spec.commuterRailRoadTrack",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_TrackedVehicle_spec_lightRailRoadTrack,
-      { "spec-lightRailRoadTrack", "dsrc.spec-lightRailRoadTrack",
+      { "spec-lightRailRoadTrack", "dsrc.LaneAttributes.TrackedVehicle.spec.lightRailRoadTrack",
         FT_BOOLEAN, 8, NULL, 0x20,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_TrackedVehicle_spec_heavyRailRoadTrack,
-      { "spec-heavyRailRoadTrack", "dsrc.spec-heavyRailRoadTrack",
+      { "spec-heavyRailRoadTrack", "dsrc.LaneAttributes.TrackedVehicle.spec.heavyRailRoadTrack",
         FT_BOOLEAN, 8, NULL, 0x10,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_TrackedVehicle_spec_otherRailType,
-      { "spec-otherRailType", "dsrc.spec-otherRailType",
+      { "spec-otherRailType", "dsrc.LaneAttributes.TrackedVehicle.spec.otherRailType",
         FT_BOOLEAN, 8, NULL, 0x08,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Vehicle_isVehicleRevocableLane,
-      { "isVehicleRevocableLane", "dsrc.isVehicleRevocableLane",
+      { "isVehicleRevocableLane", "dsrc.LaneAttributes.Vehicle.isVehicleRevocableLane",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Vehicle_isVehicleFlyOverLane,
-      { "isVehicleFlyOverLane", "dsrc.isVehicleFlyOverLane",
+      { "isVehicleFlyOverLane", "dsrc.LaneAttributes.Vehicle.isVehicleFlyOverLane",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Vehicle_hovLaneUseOnly,
-      { "hovLaneUseOnly", "dsrc.hovLaneUseOnly",
+      { "hovLaneUseOnly", "dsrc.LaneAttributes.Vehicle.hovLaneUseOnly",
         FT_BOOLEAN, 8, NULL, 0x20,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Vehicle_restrictedToBusUse,
-      { "restrictedToBusUse", "dsrc.restrictedToBusUse",
+      { "restrictedToBusUse", "dsrc.LaneAttributes.Vehicle.restrictedToBusUse",
         FT_BOOLEAN, 8, NULL, 0x10,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Vehicle_restrictedToTaxiUse,
-      { "restrictedToTaxiUse", "dsrc.restrictedToTaxiUse",
+      { "restrictedToTaxiUse", "dsrc.LaneAttributes.Vehicle.restrictedToTaxiUse",
         FT_BOOLEAN, 8, NULL, 0x08,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Vehicle_restrictedFromPublicUse,
-      { "restrictedFromPublicUse", "dsrc.restrictedFromPublicUse",
+      { "restrictedFromPublicUse", "dsrc.LaneAttributes.Vehicle.restrictedFromPublicUse",
         FT_BOOLEAN, 8, NULL, 0x04,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Vehicle_hasIRbeaconCoverage,
-      { "hasIRbeaconCoverage", "dsrc.hasIRbeaconCoverage",
+      { "hasIRbeaconCoverage", "dsrc.LaneAttributes.Vehicle.hasIRbeaconCoverage",
         FT_BOOLEAN, 8, NULL, 0x02,
         NULL, HFILL }},
     { &hf_dsrc_LaneAttributes_Vehicle_permissionOnRequest,
-      { "permissionOnRequest", "dsrc.permissionOnRequest",
+      { "permissionOnRequest", "dsrc.LaneAttributes.Vehicle.permissionOnRequest",
         FT_BOOLEAN, 8, NULL, 0x01,
         NULL, HFILL }},
     { &hf_dsrc_LaneDirection_ingressPath,
-      { "ingressPath", "dsrc.ingressPath",
+      { "ingressPath", "dsrc.LaneDirection.ingressPath",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_dsrc_LaneDirection_egressPath,
-      { "egressPath", "dsrc.egressPath",
+      { "egressPath", "dsrc.LaneDirection.egressPath",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_dsrc_TransitVehicleStatus_loading,
-      { "loading", "dsrc.loading",
+      { "loading", "dsrc.TransitVehicleStatus.loading",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_dsrc_TransitVehicleStatus_anADAuse,
-      { "anADAuse", "dsrc.anADAuse",
+      { "anADAuse", "dsrc.TransitVehicleStatus.anADAuse",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_dsrc_TransitVehicleStatus_aBikeLoad,
-      { "aBikeLoad", "dsrc.aBikeLoad",
+      { "aBikeLoad", "dsrc.TransitVehicleStatus.aBikeLoad",
         FT_BOOLEAN, 8, NULL, 0x20,
         NULL, HFILL }},
     { &hf_dsrc_TransitVehicleStatus_doorOpen,
-      { "doorOpen", "dsrc.doorOpen",
+      { "doorOpen", "dsrc.TransitVehicleStatus.doorOpen",
         FT_BOOLEAN, 8, NULL, 0x10,
         NULL, HFILL }},
     { &hf_dsrc_TransitVehicleStatus_charging,
-      { "charging", "dsrc.charging",
+      { "charging", "dsrc.TransitVehicleStatus.charging",
         FT_BOOLEAN, 8, NULL, 0x08,
         NULL, HFILL }},
     { &hf_dsrc_TransitVehicleStatus_atStopLine,
-      { "atStopLine", "dsrc.atStopLine",
+      { "atStopLine", "dsrc.TransitVehicleStatus.atStopLine",
         FT_BOOLEAN, 8, NULL, 0x04,
         NULL, HFILL }},
 
@@ -16900,35 +16660,35 @@ void proto_register_its(void)
         FT_NONE, BASE_NONE, NULL, 0,
         NULL, HFILL }},
     { &hf_tistpg_TpgAutomation_fullAutomated,
-      { "fullAutomated", "tistpg.fullAutomated",
+      { "fullAutomated", "tistpg.TpgAutomation.fullAutomated",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_tistpg_TpgAutomation_semiAutomated,
-      { "semiAutomated", "tistpg.semiAutomated",
+      { "semiAutomated", "tistpg.TpgAutomation.semiAutomated",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_tistpg_TpgAutomation_manual,
-      { "manual", "tistpg.manual",
+      { "manual", "tistpg.TpgAutomation.manual",
         FT_BOOLEAN, 8, NULL, 0x20,
         NULL, HFILL }},
     { &hf_tistpg_TpgAutomation_reserved,
-      { "reserved", "tistpg.reserved",
+      { "reserved", "tistpg.TpgAutomation.reserved",
         FT_BOOLEAN, 8, NULL, 0x10,
         NULL, HFILL }},
     { &hf_tistpg_TisProfile_reserved,
-      { "reserved", "tistpg.reserved",
+      { "reserved", "tistpg.TisProfile.reserved",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_tistpg_TisProfile_profileOne,
-      { "profileOne", "tistpg.profileOne",
+      { "profileOne", "tistpg.TisProfile.profileOne",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_tistpg_TisProfile_profileTwo,
-      { "profileTwo", "tistpg.profileTwo",
+      { "profileTwo", "tistpg.TisProfile.profileTwo",
         FT_BOOLEAN, 8, NULL, 0x20,
         NULL, HFILL }},
     { &hf_tistpg_TisProfile_profileThree,
-      { "profileThree", "tistpg.profileThree",
+      { "profileThree", "tistpg.TisProfile.profileThree",
         FT_BOOLEAN, 8, NULL, 0x10,
         NULL, HFILL }},
 
@@ -17059,31 +16819,63 @@ void proto_register_its(void)
         FT_BOOLEAN, BASE_NONE, NULL, 0,
         "BOOLEAN", HFILL }},
     { &hf_evcsn_ChargingSpotType_standardChargeMode1,
-      { "standardChargeMode1", "evcsn.standardChargeMode1",
+      { "standardChargeMode1", "evcsn.ChargingSpotType.standardChargeMode1",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_evcsn_ChargingSpotType_standardChargeMode2,
-      { "standardChargeMode2", "evcsn.standardChargeMode2",
+      { "standardChargeMode2", "evcsn.ChargingSpotType.standardChargeMode2",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
     { &hf_evcsn_ChargingSpotType_standardOrFastChargeMode3,
-      { "standardOrFastChargeMode3", "evcsn.standardOrFastChargeMode3",
+      { "standardOrFastChargeMode3", "evcsn.ChargingSpotType.standardOrFastChargeMode3",
         FT_BOOLEAN, 8, NULL, 0x20,
         NULL, HFILL }},
     { &hf_evcsn_ChargingSpotType_fastChargeWithExternalCharger,
-      { "fastChargeWithExternalCharger", "evcsn.fastChargeWithExternalCharger",
+      { "fastChargeWithExternalCharger", "evcsn.ChargingSpotType.fastChargeWithExternalCharger",
         FT_BOOLEAN, 8, NULL, 0x10,
         NULL, HFILL }},
-    { &hf_evcsn_ChargingSpotType_quickDrop,
-      { "quickDrop", "evcsn.quickDrop",
-        FT_BOOLEAN, 8, NULL, 0x80,
-        NULL, HFILL }},
-    { &hf_evcsn_ChargingSpotType_inductiveChargeWhileStationary,
-      { "inductiveChargeWhileStationary", "evcsn.inductiveChargeWhileStationary",
+    { &hf_evcsn_ChargingSpotType_spare_bit4,
+      { "spare_bit4", "evcsn.ChargingSpotType.spare.bit4",
         FT_BOOLEAN, 8, NULL, 0x08,
         NULL, HFILL }},
+    { &hf_evcsn_ChargingSpotType_spare_bit5,
+      { "spare_bit5", "evcsn.ChargingSpotType.spare.bit5",
+        FT_BOOLEAN, 8, NULL, 0x04,
+        NULL, HFILL }},
+    { &hf_evcsn_ChargingSpotType_spare_bit6,
+      { "spare_bit6", "evcsn.ChargingSpotType.spare.bit6",
+        FT_BOOLEAN, 8, NULL, 0x02,
+        NULL, HFILL }},
+    { &hf_evcsn_ChargingSpotType_spare_bit7,
+      { "spare_bit7", "evcsn.ChargingSpotType.spare.bit7",
+        FT_BOOLEAN, 8, NULL, 0x01,
+        NULL, HFILL }},
+    { &hf_evcsn_ChargingSpotType_quickDrop,
+      { "quickDrop", "evcsn.ChargingSpotType.quickDrop",
+        FT_BOOLEAN, 8, NULL, 0x80,
+        NULL, HFILL }},
+    { &hf_evcsn_ChargingSpotType_spare_bit9,
+      { "spare_bit9", "evcsn.ChargingSpotType.spare.bit9",
+        FT_BOOLEAN, 8, NULL, 0x40,
+        NULL, HFILL }},
+    { &hf_evcsn_ChargingSpotType_spare_bit10,
+      { "spare_bit10", "evcsn.ChargingSpotType.spare.bit10",
+        FT_BOOLEAN, 8, NULL, 0x20,
+        NULL, HFILL }},
+    { &hf_evcsn_ChargingSpotType_spare_bit11,
+      { "spare_bit11", "evcsn.ChargingSpotType.spare.bit11",
+        FT_BOOLEAN, 8, NULL, 0x10,
+        NULL, HFILL }},
+    { &hf_evcsn_ChargingSpotType_inductiveChargeWhileStationary,
+      { "inductiveChargeWhileStationary", "evcsn.ChargingSpotType.inductiveChargeWhileStationary",
+        FT_BOOLEAN, 8, NULL, 0x08,
+        NULL, HFILL }},
+    { &hf_evcsn_ChargingSpotType_spare_bit13,
+      { "spare_bit13", "evcsn.ChargingSpotType.spare.bit13",
+        FT_BOOLEAN, 8, NULL, 0x04,
+        NULL, HFILL }},
     { &hf_evcsn_ChargingSpotType_inductiveChargeWhileDriving,
-      { "inductiveChargeWhileDriving", "evcsn.inductiveChargeWhileDriving",
+      { "inductiveChargeWhileDriving", "evcsn.ChargingSpotType.inductiveChargeWhileDriving",
         FT_BOOLEAN, 8, NULL, 0x02,
         NULL, HFILL }},
 
@@ -17250,16 +17042,16 @@ void proto_register_its(void)
         FT_UINT32, BASE_DEC, VALS(evrsr_PowerSource_vals), 0,
         NULL, HFILL }},
     { &hf_evrsr_SupportedPaymentTypes_contract,
-      { "contract", "evrsr.contract",
+      { "contract", "evrsr.SupportedPaymentTypes.contract",
         FT_BOOLEAN, 8, NULL, 0x80,
         NULL, HFILL }},
     { &hf_evrsr_SupportedPaymentTypes_externalIdentification,
-      { "externalIdentification", "evrsr.externalIdentification",
+      { "externalIdentification", "evrsr.SupportedPaymentTypes.externalIdentification",
         FT_BOOLEAN, 8, NULL, 0x40,
         NULL, HFILL }},
 
 /*--- End of included file: packet-its-hfarr.c ---*/
-#line 379 "./asn1/its/packet-its-template.c"
+#line 382 "./asn1/its/packet-its-template.c"
 
     { &hf_its_roadworksSubCauseCode,
       { "roadworksSubCauseCode", "its.subCauseCode",
@@ -17772,6 +17564,9 @@ void proto_register_its(void)
 /* --- Module SSEM-PDU-Descriptions --- --- ---                               */
 
 
+/* --- Module RTCMEM-PDU-Descriptions --- --- ---                             */
+
+
 /* --- Module CAM-PDU-Descriptions --- --- ---                                */
 
     &ett_cam_CoopAwareness,
@@ -17874,14 +17669,24 @@ void proto_register_its(void)
     &ett_evrsr_SupportedPaymentTypes,
 
 /*--- End of included file: packet-its-ettarr.c ---*/
-#line 582 "./asn1/its/packet-its-template.c"
+#line 585 "./asn1/its/packet-its-template.c"
     };
+
+    static ei_register_info ei[] = {
+    { &ei_its_no_sub_dis, { "its.no_subdissector", PI_PROTOCOL, PI_NOTE, "No subdissector found for this Message id/protocol version combination", EXPFILL }},
+    };
+
+    expert_module_t* expert_its;
 
     proto_its = proto_register_protocol("Intelligent Transport Systems", "ITS", "its");
 
     proto_register_field_array(proto_its, hf_its, array_length(hf_its));
 
     proto_register_subtree_array(ett, array_length(ett));
+
+    expert_its = expert_register_protocol(proto_its);
+
+    expert_register_field_array(expert_its, ei, array_length(ei));
 
     register_dissector("its", dissect_its_PDU, proto_its);
 
@@ -17914,6 +17719,15 @@ void proto_register_its(void)
 
 #define BTP_SUBDISS_SZ 2
 #define BTP_PORTS_SZ   10
+
+#define ITS_CAM_PROT_VER 2
+#define ITS_DENM_PROT_VER 2
+#define ITS_SPATEM_PROT_VER 2
+#define ITS_MAPEM_PROT_VER 2
+#define ITS_IVIM_PROT_VER 2
+#define ITS_SREM_PROT_VER 2
+#define ITS_SREM_PROT_VER 2
+
 void proto_reg_handoff_its(void)
 {
     const char *subdissector[BTP_SUBDISS_SZ] = { "btpa.port", "btpb.port" };
@@ -17929,14 +17743,14 @@ void proto_reg_handoff_its(void)
         }
     }
 
-    dissector_add_uint("its.msg_id", ITS_DENM,              create_dissector_handle( dissect_denm_DecentralizedEnvironmentalNotificationMessage_PDU, proto_its_denm ));
-    dissector_add_uint("its.msg_id", ITS_CAM,               create_dissector_handle( dissect_cam_CoopAwareness_PDU, proto_its_cam ));
-    dissector_add_uint("its.msg_id", ITS_SPATEM,            create_dissector_handle( dissect_dsrc_SPAT_PDU, proto_its_spatem ));
-    dissector_add_uint("its.msg_id", ITS_MAPEM,             create_dissector_handle( dissect_dsrc_MapData_PDU, proto_its_mapem ));
-    dissector_add_uint("its.msg_id", ITS_IVIM,              create_dissector_handle( dissect_ivi_IviStructure_PDU, proto_its_ivim ));
+    dissector_add_uint("its.msg_id", (ITS_DENM_PROT_VER << 16) + ITS_DENM,          create_dissector_handle( dissect_denm_DecentralizedEnvironmentalNotificationMessage_PDU, proto_its_denm ));
+    dissector_add_uint("its.msg_id", (ITS_CAM_PROT_VER <<16) + ITS_CAM,             create_dissector_handle( dissect_cam_CoopAwareness_PDU, proto_its_cam ));
+    dissector_add_uint("its.msg_id", (ITS_SPATEM_PROT_VER << 16) + ITS_SPATEM,      create_dissector_handle( dissect_dsrc_SPAT_PDU, proto_its_spatem ));
+    dissector_add_uint("its.msg_id", (ITS_MAPEM_PROT_VER << 16) + ITS_MAPEM,        create_dissector_handle( dissect_dsrc_MapData_PDU, proto_its_mapem ));
+    dissector_add_uint("its.msg_id", (ITS_IVIM_PROT_VER << 16) + ITS_IVIM,          create_dissector_handle( dissect_ivi_IviStructure_PDU, proto_its_ivim ));
     dissector_add_uint("its.msg_id", ITS_EV_RSR,            create_dissector_handle( dissect_evrsr_EV_RSR_MessageBody_PDU, proto_its_evrsr ));
-    dissector_add_uint("its.msg_id", ITS_SREM,              create_dissector_handle( dissect_dsrc_SignalRequestMessage_PDU, proto_its_srem ));
-    dissector_add_uint("its.msg_id", ITS_SSEM,              create_dissector_handle( dissect_dsrc_SignalStatusMessage_PDU, proto_its_ssem ));
+    dissector_add_uint("its.msg_id", (ITS_SREM_PROT_VER << 16) + ITS_SREM,          create_dissector_handle( dissect_dsrc_SignalRequestMessage_PDU, proto_its_srem ));
+    dissector_add_uint("its.msg_id", (ITS_SREM_PROT_VER << 16) + ITS_SSEM,              create_dissector_handle( dissect_dsrc_SignalStatusMessage_PDU, proto_its_ssem ));
     dissector_add_uint("its.msg_id", ITS_EVCSN,             create_dissector_handle( dissect_evcsn_EVChargingSpotNotificationPOIMessage_PDU, proto_its_evcsn ));
     dissector_add_uint("its.msg_id", ITS_TISTPGTRANSACTION, create_dissector_handle( dissect_tistpg_TisTpgTransaction_PDU, proto_its_tistpg ));
 
