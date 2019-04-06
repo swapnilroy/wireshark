@@ -5445,6 +5445,7 @@ dissect_nas_5gs(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void* data)
     proto_tree *nas_5gs_tree, *sub_tree;
     int offset = 0;
     guint8 seq_hdr_type, ext_pd;
+    guint32 security_hdr_type;
 
     /* make entry in the Protocol column on summary display */
     col_append_sep_str(pinfo->cinfo, COL_PROTOCOL, "/", "NAS-5GS");
@@ -5472,7 +5473,7 @@ dissect_nas_5gs(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void* data)
     offset++;
     /* Security header type associated with a spare half octet    octet 2 */
     proto_tree_add_item(sub_tree, hf_nas_5gs_spare_half_octet, tvb, offset, 1, ENC_BIG_ENDIAN);
-    proto_tree_add_item(sub_tree, hf_nas_5gs_security_header_type, tvb, offset, 1, ENC_BIG_ENDIAN);
+    proto_tree_add_item_ret_uint(sub_tree, hf_nas_5gs_security_header_type, tvb, offset, 1, ENC_BIG_ENDIAN, &security_hdr_type);
     offset++;
     /* Message authentication code octet 3 - 6 */
     proto_tree_add_item(sub_tree, hf_nas_5gs_msg_auth_code, tvb, offset, 4, ENC_BIG_ENDIAN);
@@ -5482,10 +5483,16 @@ dissect_nas_5gs(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void* data)
     offset++;
 
     /* XXX Check if encryted or not and if not call dissect_nas_5gs_common()*/
-    if (g_nas_5gs_null_decipher) {
+    if (g_nas_5gs_null_decipher ||
+        (security_hdr_type !=2 && security_hdr_type != 4)) {
         return dissect_nas_5gs_common(tvb, pinfo, nas_5gs_tree, offset, data);
     } else {
-        proto_tree_add_subtree(nas_5gs_tree, tvb, offset, -1, ett_nas_5gs_enc, NULL, "Encrypted data");
+        ext_pd = tvb_get_guint8(tvb,offset);
+        if (ext_pd == TGPP_PD_5GMM) {
+            return dissect_nas_5gs_common(tvb, pinfo, nas_5gs_tree, offset, data);
+        } else {
+            proto_tree_add_subtree(nas_5gs_tree, tvb, offset, -1, ett_nas_5gs_enc, NULL, "Encrypted data");
+        }
     }
 
     return tvb_reported_length(tvb);
