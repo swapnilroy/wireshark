@@ -12,9 +12,9 @@
 
 /*
  * See https://quicwg.org
- * https://tools.ietf.org/html/draft-ietf-quic-transport-18
- * https://tools.ietf.org/html/draft-ietf-quic-tls-18
- * https://tools.ietf.org/html/draft-ietf-quic-invariants-03
+ * https://tools.ietf.org/html/draft-ietf-quic-transport-20
+ * https://tools.ietf.org/html/draft-ietf-quic-tls-20
+ * https://tools.ietf.org/html/draft-ietf-quic-invariants-04
  */
 
 #include <config.h>
@@ -306,6 +306,8 @@ const value_string quic_version_vals[] = {
     { 0xff000010, "draft-16" },
     { 0xff000011, "draft-17" },
     { 0xff000012, "draft-18" },
+    { 0xff000013, "draft-19" },
+    { 0xff000014, "draft-20" },
     { 0, NULL }
 };
 
@@ -424,9 +426,10 @@ static const range_string quic_transport_error_code_vals[] = {
     { 0x0006, 0x0006, "FINAL_SIZE_ERROR" },
     { 0x0007, 0x0007, "FRAME_ENCODING_ERROR" },
     { 0x0008, 0x0008, "TRANSPORT_PARAMETER_ERROR" },
-    { 0x0009, 0x0009, "VERSION_NEGOTIATION_ERROR" },
+    { 0x0009, 0x0009, "VERSION_NEGOTIATION_ERROR" }, // removed in draft -19
     { 0x000A, 0x000A, "PROTOCOL_VIOLATION" },
     { 0x000C, 0x000C, "INVALID_MIGRATION" },
+    { 0x000D, 0x000D, "CRYPTO_BUFFER_EXCEEDED" },
     { 0x0100, 0x01FF, "CRYPTO_ERROR" },
     { 0, 0, NULL }
 };
@@ -1009,7 +1012,7 @@ dissect_quic_frame_type(tvbuff_t *tvb, packet_info *pinfo, proto_tree *quic_tree
                  * after capturing the packets due to processing delay.)
                  * These keys will be loaded in the first HS/0-RTT/1-RTT msg.
                  */
-                call_dissector(tls13_handshake_handle, next_tvb, pinfo, ft_tree);
+                call_dissector_with_data(tls13_handshake_handle, next_tvb, pinfo, ft_tree, GUINT_TO_POINTER(crypto_offset));
                 col_set_writable(pinfo->cinfo, -1, TRUE);
             }
             offset += (guint32)crypto_length;
@@ -1235,10 +1238,6 @@ dissect_quic_frame_type(tvbuff_t *tvb, packet_info *pinfo, proto_tree *quic_tree
 #endif /* HAVE_LIBGCRYPT_AEAD */
 
 #ifdef HAVE_LIBGCRYPT_AEAD
-static gcry_error_t
-qhkdf_expand(int md, const guint8 *secret, guint secret_len,
-             const char *label, guint8 *out, guint out_len);
-
 static gboolean
 quic_cipher_init(quic_cipher *cipher, int hash_algo, guint8 key_length, guint8 *secret);
 
@@ -1496,43 +1495,6 @@ quic_create_decoders(packet_info *pinfo, quic_info_data_t *quic_info, quic_ciphe
 }
 
 /**
- * Computes QHKDF-Expand(Secret, Label, Length).
- * Caller must ensure that "out" is large enough for "out_len".
- */
-static gcry_error_t
-qhkdf_expand(int md, const guint8 *secret, guint secret_len,
-             const char *label, guint8 *out, guint out_len)
-{
-    /* https://tools.ietf.org/html/draft-ietf-quic-tls-10#section-5.2.1
-     *     QHKDF-Expand(Secret, Label, Length) =
-     *          HKDF-Expand(Secret, QhkdfLabel, Length)
-     *     struct {
-     *         uint16 length = Length;
-     *         opaque label<6..255> = "QUIC " + Label;
-     *     } QhkdfLabel;
-     */
-    gcry_error_t err;
-    const guint label_length = (guint) strlen(label);
-
-    /* Some sanity checks */
-    DISSECTOR_ASSERT(label_length > 0 && 5 + label_length <= 255);
-
-    /* info = QhkdfLabel { length, label } */
-    GByteArray *info = g_byte_array_new();
-    const guint16 length = g_htons(out_len);
-    g_byte_array_append(info, (const guint8 *)&length, sizeof(length));
-
-    const guint8 label_vector_length = 5 + label_length;
-    g_byte_array_append(info, &label_vector_length, 1);
-    g_byte_array_append(info, "QUIC ", 5);
-    g_byte_array_append(info, label, label_length);
-
-    err = hkdf_expand(md, secret, secret_len, info->data, info->len, out, out_len);
-    g_byte_array_free(info, TRUE);
-    return err;
-}
-
-/**
  * Tries to obtain the QUIC application traffic secrets.
  */
 static gboolean
@@ -1576,12 +1538,13 @@ quic_cipher_init(quic_cipher *cipher, int hash_algo, guint8 key_length, guint8 *
  * Updates the packet protection secret to the next one.
  */
 static void
-quic_update_key(int hash_algo, quic_pp_state_t *pp_state, gboolean from_client)
+quic_update_key(int hash_algo, quic_pp_state_t *pp_state)
 {
     guint hash_len = gcry_md_get_algo_dlen(hash_algo);
-    qhkdf_expand(hash_algo, pp_state->next_secret, hash_len,
-                 from_client ? "client 1rtt" : "server 1rtt",
-                 pp_state->next_secret, hash_len);
+    gboolean ret = quic_hkdf_expand_label(hash_algo, pp_state->next_secret, hash_len,
+                                          "traffic upd", pp_state->next_secret, hash_len);
+    /* This must always succeed as our hash algorithm was already validated. */
+    DISSECTOR_ASSERT(ret);
 }
 
 /**
@@ -1618,7 +1581,7 @@ quic_get_1rtt_hp_cipher(packet_info *pinfo, quic_info_data_t *quic_info, gboolea
             return NULL;
         }
 
-        /* Create initial cipher handles for KEY_PHASE 0 and 1. */
+        // Create initial cipher handles for KEY_PHASE 0 using the 1-RTT keys.
         if (!quic_cipher_prepare(&client_pp->cipher[0], quic_info->hash_algo,
                                  quic_info->cipher_algo, quic_info->cipher_mode, client_pp->next_secret, &error) ||
             !quic_cipher_prepare(&server_pp->cipher[0], quic_info->hash_algo,
@@ -1626,7 +1589,9 @@ quic_get_1rtt_hp_cipher(packet_info *pinfo, quic_info_data_t *quic_info, gboolea
             quic_info->skip_decryption = TRUE;
             return NULL;
         }
-        quic_update_key(quic_info->hash_algo, pp_state, !from_server);
+        // Rotate the 1-RTT key for the client and server for the next key update.
+        quic_update_key(quic_info->hash_algo, client_pp);
+        quic_update_key(quic_info->hash_algo, server_pp);
     }
 
     // Note: Header Protect cipher does not change after Key Update.
@@ -1656,13 +1621,14 @@ quic_get_pp_cipher(gboolean key_phase, quic_info_data_t *quic_info, gboolean fro
      * If the key phase changed, try to decrypt the packet using the new cipher.
      * If that fails, then it is either a malicious packet or out-of-order.
      * In that case, try the previous cipher (unless it is the very first KP1).
+     * '!!' is due to key_phase being a signed bitfield, it forces -1 into 1.
      */
-    if (key_phase != pp_state->key_phase) {
+    if (key_phase != !!pp_state->key_phase) {
         quic_cipher new_cipher;
 
         memset(&new_cipher, 0, sizeof(quic_cipher));
         if (!quic_cipher_prepare(&new_cipher, quic_info->hash_algo,
-                                 quic_info->cipher_algo, quic_info->cipher_mode, server_pp->next_secret, &error)) {
+                                 quic_info->cipher_algo, quic_info->cipher_mode, pp_state->next_secret, &error)) {
             /* This should never be reached, if the parameters were wrong
              * before, then it should have set "skip_decryption". */
             REPORT_DISSECTOR_BUG("quic_cipher_prepare unexpectedly failed: %s", error);
@@ -1676,7 +1642,7 @@ quic_get_pp_cipher(gboolean key_phase, quic_info_data_t *quic_info, gboolean fro
             /* Verified the cipher, use it from now on and rotate the key. */
             quic_cipher_reset(&pp_state->cipher[key_phase]);
             pp_state->cipher[key_phase] = new_cipher;
-            quic_update_key(quic_info->hash_algo, pp_state, !from_server);
+            quic_update_key(quic_info->hash_algo, pp_state);
 
             pp_state->key_phase = key_phase;
             //pp_state->changed_in_pkn = pkn;
@@ -1818,7 +1784,7 @@ dissect_quic_long_header_common(tvbuff_t *tvb, packet_info *pinfo, proto_tree *q
     return offset;
 }
 
-/* Retry Packet dissection for draft -13 and newer. */
+/* Retry Packet dissection */
 static int
 dissect_quic_retry_packet(tvbuff_t *tvb, packet_info *pinfo, proto_tree *quic_tree,
                           quic_datagram *dgram_info _U_, quic_packet_info_t *quic_packet)
@@ -1830,16 +1796,15 @@ dissect_quic_retry_packet(tvbuff_t *tvb, packet_info *pinfo, proto_tree *quic_tr
     guint       retry_token_len;
 
     proto_tree_add_item(quic_tree, hf_quic_long_packet_type, tvb, offset, 1, ENC_NA);
-    offset += 1;
-    col_set_str(pinfo->cinfo, COL_INFO, "Retry");
-
-    offset = dissect_quic_long_header_common(tvb, pinfo, quic_tree, offset, quic_packet, &version, &dcid, &scid);
-
     proto_tree_add_item_ret_uint(quic_tree, hf_quic_odcil, tvb, offset, 1, ENC_NA, &odcil);
     if (odcil) {
         odcil += 3;
     }
     offset += 1;
+    col_set_str(pinfo->cinfo, COL_INFO, "Retry");
+
+    offset = dissect_quic_long_header_common(tvb, pinfo, quic_tree, offset, quic_packet, &version, &dcid, &scid);
+
     proto_tree_add_item(quic_tree, hf_quic_odcid, tvb, offset, odcil, ENC_NA);
     offset += odcil;
     retry_token_len = tvb_reported_length_remaining(tvb, offset);

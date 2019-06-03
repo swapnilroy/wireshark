@@ -62,13 +62,14 @@ macro(set_extcap_executable_properties _executable)
 				set_target_properties(${_executable} PROPERTIES
 					RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/run/Wireshark.app/Contents/MacOS/extcap
 				)
-				# Add a wrapper script which runs each executable from the
-				# correct location. This adds convenience but makes debugging
-				# more difficult.
-				file(REMOVE ${CMAKE_BINARY_DIR}/run/${_executable})
-				file(WRITE ${CMAKE_BINARY_DIR}/run/${_executable} "#!/bin/sh\n")
-				file(APPEND ${CMAKE_BINARY_DIR}/run/${_executable} "exec ${CMAKE_BINARY_DIR}/run/Wireshark.app/Contents/MacOS/extcap/${_executable} \"\$\@\"\n")
-				execute_process(COMMAND chmod a+x ${CMAKE_BINARY_DIR}/run/${_executable})
+				# Create a convenience link from run/<name> to its respective
+				# target in the application bundle.
+				add_custom_target(${_executable}-symlink
+					COMMAND ln -s -f
+						Wireshark.app/Contents/MacOS/${_executable}
+						${CMAKE_BINARY_DIR}/run/${_executable}
+				)
+				add_dependencies(${_executable} ${_executable}-symlink)
 			endif()
 		endif()
 	endif()
@@ -91,7 +92,8 @@ if(BUILD_androiddump)
 			set(androiddump_LIBS
 				ui
 				${GLIB2_LIBRARIES}
-				${PCAP_LIBRARIES}
+				${WIN_WS2_32_LIBRARY}
+				$<$<BOOL:${PCAP_FOUND}>:pcap::pcap>
 			)
 		else()
 			message(FATAL_ERROR "You are trying to build androiddump with libpcap but do not have it")
@@ -103,6 +105,7 @@ if(BUILD_androiddump)
 			${GLIB2_LIBRARIES}
 			${ZLIB_LIBRARIES}
 			${CMAKE_DL_LIBS}
+			${WIN_WS2_32_LIBRARY}
 		)
 	endif()
 	set(androiddump_FILES
@@ -124,6 +127,7 @@ if(BUILD_sshdump AND LIBSSH_FOUND)
 		wsutil
 		${GLIB2_LIBRARIES}
 		${CMAKE_DL_LIBS}
+		${WIN_WS2_32_LIBRARY}
 		${LIBSSH_LIBRARIES}
 	)
 	set(sshdump_FILES
@@ -150,6 +154,7 @@ if(BUILD_ciscodump AND LIBSSH_FOUND)
 		wsutil
 		${GLIB2_LIBRARIES}
 		${CMAKE_DL_LIBS}
+		${WIN_WS2_32_LIBRARY}
 		${LIBSSH_LIBRARIES}
 	)
 	set(ciscodump_FILES
@@ -196,8 +201,10 @@ endif()
 
 if(BUILD_udpdump)
 	set(udpdump_LIBS
+		wsutil
 		${GLIB2_LIBRARIES}
 		${CMAKE_DL_LIBS}
+		${WIN_WS2_32_LIBRARY}
 		wsutil
 		writecap
 	)
@@ -219,9 +226,11 @@ if(BUILD_randpktdump)
 	set(randpktdump_LIBS
 		randpkt_core
 		wiretap
+		wsutil
 		${GLIB2_LIBRARIES}
 		${ZLIB_LIBRARIES}
 		${CMAKE_DL_LIBS}
+		${WIN_WS2_32_LIBRARY}
 	)
 	set(randpktdump_FILES
 		$<TARGET_OBJECTS:cli_main>

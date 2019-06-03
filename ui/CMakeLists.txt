@@ -86,7 +86,7 @@ set_target_properties(ui PROPERTIES
 	FOLDER "UI"
 )
 
-target_link_libraries(ui wsutil)
+target_link_libraries(ui wsutil caputils)
 
 if (HTML_HELP_COMPILER)
 	add_definitions(-DHHC_DIR)
@@ -104,7 +104,6 @@ CHECKAPI(
 	NAME
 	  ui-base
 	SWITCHES
-	  -g deprecated-gtk
 	SOURCES
 	  ${NONGENERATED_UI_SRC}
 # Flex files not included due to use of malloc, free etc.
@@ -113,7 +112,7 @@ CHECKAPI(
 	NAME
 	  ui-todo
 	SWITCHES
-	  -M -g deprecated-gtk-todo
+	  -M
 	SOURCES
 	  ${NONGENERATED_UI_SRC}
 # Flex files not included due to use of malloc, free etc.

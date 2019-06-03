@@ -17,20 +17,12 @@
 
 #include <sys/types.h>
 
-#ifdef HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
-
 #ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif
 
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
-#endif
-
-#ifdef HAVE_ARPA_INET_H
-#include <arpa/inet.h>
 #endif
 
 #if defined(__APPLE__) && defined(__LP64__)
@@ -44,6 +36,8 @@
 #include <wsutil/strtoi.h>
 #include <cli_main.h>
 #include <version_info.h>
+
+#include <wsutil/socket.h>
 
 #ifndef HAVE_GETOPT_LONG
 #include "wsutil/wsgetopt.h"
@@ -105,6 +99,7 @@
 /**#define DEBUG_CHILD_DUMPCAP**/
 
 #ifdef _WIN32
+#include "wsutil/win32-utils.h"
 #ifdef DEBUG_DUMPCAP
 #include <conio.h>          /* _getch() */
 #endif
@@ -223,7 +218,7 @@ typedef struct _pcap_pipe_info {
 } pcap_pipe_info_t;
 
 typedef struct _pcapng_pipe_info {
-    struct pcapng_block_header_s         bh;  /**< Pcapng general block header when capturing from a pipe */
+    pcapng_block_header_t bh;                  /**< Pcapng general block header when capturing from a pipe */
     GArray *src_iface_to_global;               /**< Int array mapping local IDB numbers to global_ld.interface_data */
 } pcapng_pipe_info_t;
 
@@ -322,7 +317,7 @@ typedef struct _pcap_queue_element {
     capture_src        *pcap_src;
     union {
         struct pcap_pkthdr  phdr;
-        struct pcapng_block_header_s  bh;
+        pcapng_block_header_t  bh;
     } u;
     u_char             *pd;
 } pcap_queue_element;
@@ -382,8 +377,8 @@ static void capture_loop_write_packet_cb(u_char *pcap_src_p, const struct pcap_p
                                          const u_char *pd);
 static void capture_loop_queue_packet_cb(u_char *pcap_src_p, const struct pcap_pkthdr *phdr,
                                          const u_char *pd);
-static void capture_loop_write_pcapng_cb(capture_src *pcap_src, const struct pcapng_block_header_s *bh, u_char *pd);
-static void capture_loop_queue_pcapng_cb(capture_src *pcap_src, const struct pcapng_block_header_s *bh, u_char *pd);
+static void capture_loop_write_pcapng_cb(capture_src *pcap_src, const pcapng_block_header_t *bh, u_char *pd);
+static void capture_loop_queue_pcapng_cb(capture_src *pcap_src, const pcapng_block_header_t *bh, u_char *pd);
 static void capture_loop_get_errmsg(char *errmsg, size_t errmsglen,
                                     char *secondary_errmsg,
                                     size_t secondary_errmsglen,
@@ -1130,10 +1125,9 @@ report_counts_siginfo(int signum _U_)
 static void
 exit_main(int status)
 {
-#ifdef _WIN32
-    /* Shutdown windows sockets */
-    WSACleanup();
+    ws_cleanup_sockets();
 
+#ifdef _WIN32
     /* can be helpful for debugging */
 #ifdef DEBUG_DUMPCAP
     printf("Press any key\n");
@@ -1348,6 +1342,12 @@ static void *cap_thread_read(void *arg)
         }
         g_mutex_unlock(pcap_src->cap_pipe_read_mtx);
     }
+    /* Post to queue if we didn't read enough data as the main thread waits for the message */
+    g_mutex_lock(pcap_src->cap_pipe_read_mtx);
+    if (pcap_src->cap_pipe_bytes_read < pcap_src->cap_pipe_bytes_to_read) {
+        g_async_queue_push(pcap_src->cap_pipe_done_q, pcap_src->cap_pipe_buf); /* Any non-NULL value will do */
+    }
+    g_mutex_unlock(pcap_src->cap_pipe_read_mtx);
     return NULL;
 }
 #endif
@@ -1415,23 +1415,10 @@ cap_open_socket(char *pipename, capture_src *pcap_src, char *errmsg, size_t errm
 
     if (((fd = (int)socket(AF_INET, SOCK_STREAM, 0)) < 0) ||
          (connect(fd, (struct sockaddr *)&sa, sizeof(sa)) < 0)) {
-#ifdef _WIN32
-        LPTSTR errorText = NULL;
-        int lastError;
-
-        lastError = WSAGetLastError();
-        FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM |
-                      FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                      FORMAT_MESSAGE_IGNORE_INSERTS,
-                      NULL, lastError, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                      (LPTSTR)&errorText, 0, NULL);
-#endif
         g_snprintf(errmsg, (gulong)errmsgl,
             "The capture session could not be initiated due to the socket error: \n"
 #ifdef _WIN32
-            "         %d: %s", lastError, errorText ? (char *)errorText : "Unknown");
-        if (errorText)
-            LocalFree(errorText);
+            "         %s", win32strerror(WSAGetLastError()));
 #else
             "         %d: %s", errno, g_strerror(errno));
 #endif
@@ -1514,20 +1501,11 @@ cap_pipe_read_data_bytes(capture_src *pcap_src, char *errmsg, size_t errmsgl)
                     pcap_src->cap_pipe_err = PIPEOF;
                 } else {
 #ifdef _WIN32
-                    LPTSTR errorText = NULL;
-                    int lastError = WSAGetLastError();
+                    DWORD lastError = WSAGetLastError();
                     errno = lastError;
-                    FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM |
-                                FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                                FORMAT_MESSAGE_IGNORE_INSERTS,
-                                NULL, lastError, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                                (LPTSTR)&errorText, 0, NULL);
                     g_snprintf(errmsg, (gulong)errmsgl,
-                               "Error on pipe data during cap_pipe_read: "
-                               "         %d: %s", lastError,
-                               errorText ? (char *)errorText : "Unknown");
-                    if (errorText)
-                        LocalFree(errorText);
+                               "Error on pipe data during cap_pipe_read: %s.",
+                               win32strerror(lastError));
 #else
                     g_snprintf(errmsg, (gulong)errmsgl,
                                "Error on pipe data during cap_pipe_read: %s.",
@@ -1581,7 +1559,6 @@ cap_pipe_open_live(char *pipename,
     struct sockaddr_un sa;
 #else /* _WIN32 */
     char    *pncopy, *pos;
-    wchar_t *err_str;
     char* extcap_pipe_name;
 #endif
     gboolean extcap_pipe = FALSE;
@@ -1739,25 +1716,19 @@ cap_pipe_open_live(char *pipename,
                 break;
 
             if (GetLastError() != ERROR_PIPE_BUSY) {
-                FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS,
-                              NULL, GetLastError(), 0, (LPTSTR) &err_str, 0, NULL);
                 g_snprintf(errmsg, (gulong)errmsgl,
                            "The capture session on \"%s\" could not be started "
-                           "due to error on pipe open: %s (error %lu).",
-                           pipename, utf_16to8(err_str), GetLastError());
-                LocalFree(err_str);
+                           "due to error on pipe open: %s.",
+                           pipename, win32strerror(GetLastError()));
                 pcap_src->cap_pipe_err = PIPERR;
                 return;
             }
 
             if (!WaitNamedPipe(utf_8to16(pipename), 30 * 1000)) {
-                FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS,
-                             NULL, GetLastError(), 0, (LPTSTR) &err_str, 0, NULL);
                 g_snprintf(errmsg, (gulong)errmsgl,
                            "The capture session on \"%s\" timed out during "
-                           "pipe open: %s (error %lu).",
-                           pipename, utf_16to8(err_str), GetLastError());
-                LocalFree(err_str);
+                           "pipe open: %s.",
+                           pipename, win32strerror(GetLastError()));
                 pcap_src->cap_pipe_err = PIPERR;
                 return;
             }
@@ -2020,22 +1991,22 @@ pcapng_read_shb(capture_src *pcap_src,
                 char *errmsg,
                 size_t errmsgl)
 {
-    struct pcapng_section_header_block_s shb;
+    pcapng_section_header_block_t shb;
 
 #ifdef _WIN32
     if (pcap_src->from_cap_socket)
 #endif
     {
-        pcap_src->cap_pipe_bytes_to_read = sizeof(struct pcapng_block_header_s) + sizeof(struct pcapng_section_header_block_s);
+        pcap_src->cap_pipe_bytes_to_read = sizeof(pcapng_block_header_t) + sizeof(pcapng_section_header_block_t);
         if (cap_pipe_read_data_bytes(pcap_src, errmsg, errmsgl) < 0) {
             return -1;
         }
     }
 #ifdef _WIN32
     else {
-        pcap_src->cap_pipe_buf = pcap_src->cap_pipe_databuf + sizeof(struct pcapng_block_header_s);
+        pcap_src->cap_pipe_buf = pcap_src->cap_pipe_databuf + sizeof(pcapng_block_header_t);
         pcap_src->cap_pipe_bytes_read = 0;
-        pcap_src->cap_pipe_bytes_to_read = sizeof(struct pcapng_section_header_block_s);
+        pcap_src->cap_pipe_bytes_to_read = sizeof(pcapng_section_header_block_t);
         g_async_queue_push(pcap_src->cap_pipe_pending_q, pcap_src->cap_pipe_buf);
         g_async_queue_pop(pcap_src->cap_pipe_done_q);
         if (pcap_src->cap_pipe_bytes_read <= 0) {
@@ -2049,10 +2020,10 @@ pcapng_read_shb(capture_src *pcap_src,
             return -1;
         }
         /* Continuing with STATE_EXPECT_DATA requires reading into cap_pipe_databuf at offset cap_pipe_bytes_read */
-        pcap_src->cap_pipe_bytes_read = sizeof(struct pcapng_block_header_s) + sizeof(struct pcapng_section_header_block_s);
+        pcap_src->cap_pipe_bytes_read = sizeof(pcapng_block_header_t) + sizeof(pcapng_section_header_block_t);
     }
 #endif
-    memcpy(&shb, pcap_src->cap_pipe_databuf + sizeof(struct pcapng_block_header_s), sizeof(struct pcapng_section_header_block_s));
+    memcpy(&shb, pcap_src->cap_pipe_databuf + sizeof(pcapng_block_header_t), sizeof(pcapng_section_header_block_t));
     switch (shb.magic)
     {
     case PCAPNG_MAGIC:
@@ -2061,9 +2032,30 @@ pcapng_read_shb(capture_src *pcap_src,
     case PCAPNG_SWAPPED_MAGIC:
         g_log(LOG_DOMAIN_CAPTURE_CHILD, G_LOG_LEVEL_DEBUG, "pcapng SHB SWAPPED MAGIC");
         /*
-         * pcapng sources can contain all sorts of block types. Rather than add a bunch of
-         * complexity to this code (which is often privileged), punt and tell the user to
-         * swap bytes elsewhere.
+         * pcapng sources can contain all sorts of block types.
+         * Rather than add a bunch of complexity to this code (which is
+         * often privileged), punt and tell the user to swap bytes
+         * elsewhere.
+         *
+         * XXX - punting means that the Wireshark test suite must be
+         * modified to:
+         *
+         *  1) have both little-endian and big-endian versions of
+         *     all pcapng files piped to dumpcap;
+         *
+         *  2) pipe the appropriate file to dumpcap, depending on
+         *     the byte order of the host on which the tests are
+         *     being run;
+         *
+         * as per comments in bug 15772 and 15754.
+         *
+         * Are we *really* certain that the complexity added would be
+         * significant enough to make adding it a security risk?  And
+         * why would this code even be running with any elevated
+         * privileges if you're capturing from a pipe?  We should not
+         * only have given up all additional privileges if we're reading
+         * from a pipe, we should give them up in such a fashion that
+         * we can't reclaim them.
          */
 #if G_BYTE_ORDER == G_BIG_ENDIAN
 #define OUR_ENDIAN "big"
@@ -2096,7 +2088,7 @@ pcapng_read_shb(capture_src *pcap_src,
  * Rewrite EPB and ISB interface IDs.
  */
 static gboolean
-pcapng_adjust_block(capture_src *pcap_src, const struct pcapng_block_header_s *bh, u_char *pd)
+pcapng_adjust_block(capture_src *pcap_src, const pcapng_block_header_t *bh, u_char *pd)
 {
     switch(bh->block_type) {
     case BLOCK_TYPE_SHB:
@@ -2165,9 +2157,9 @@ pcapng_adjust_block(capture_src *pcap_src, const struct pcapng_block_header_s *b
         }
         /* The interface ID is the first 32-bit field after the BH for both EPBs and ISBs. */
         guint32 iface_id;
-        memcpy(&iface_id, pd + sizeof(struct pcapng_block_header_s), 4);
+        memcpy(&iface_id, pd + sizeof(pcapng_block_header_t), 4);
         if (iface_id < pcap_src->cap_pipe_info.pcapng.src_iface_to_global->len) {
-            memcpy(pd + sizeof(struct pcapng_block_header_s),
+            memcpy(pd + sizeof(pcapng_block_header_t),
                    &g_array_index(pcap_src->cap_pipe_info.pcapng.src_iface_to_global, guint32, iface_id), 4);
         } else {
             g_log(LOG_DOMAIN_CAPTURE_CHILD, G_LOG_LEVEL_DEBUG, "%s: pcapng EPB or ISB interface id %u > max %u", G_STRFUNC, iface_id, pcap_src->cap_pipe_info.pcapng.src_iface_to_global->len);
@@ -2189,7 +2181,7 @@ pcapng_pipe_open_live(int fd,
                       size_t errmsgl)
 {
     guint32 type = BLOCK_TYPE_SHB;
-    struct pcapng_block_header_s *bh = &pcap_src->cap_pipe_info.pcapng.bh;
+    pcapng_block_header_t *bh = &pcap_src->cap_pipe_info.pcapng.bh;
 
     g_log(LOG_DOMAIN_CAPTURE_CHILD, G_LOG_LEVEL_DEBUG, "pcapng_pipe_open_live: fd %d", fd);
 #ifdef _WIN32
@@ -2199,12 +2191,12 @@ pcapng_pipe_open_live(int fd,
         memcpy(pcap_src->cap_pipe_databuf, &type, sizeof(guint32));
         /* read the rest of the pcapng general block header */
         pcap_src->cap_pipe_bytes_read = sizeof(guint32);
-        pcap_src->cap_pipe_bytes_to_read = sizeof(struct pcapng_block_header_s);
+        pcap_src->cap_pipe_bytes_to_read = sizeof(pcapng_block_header_t);
         pcap_src->cap_pipe_fd = fd;
         if (cap_pipe_read_data_bytes(pcap_src, errmsg, errmsgl) < 0) {
             goto error;
         }
-        memcpy(bh, pcap_src->cap_pipe_databuf, sizeof(struct pcapng_block_header_s));
+        memcpy(bh, pcap_src->cap_pipe_databuf, sizeof(pcapng_block_header_t));
     }
 #ifdef _WIN32
     else {
@@ -2227,8 +2219,8 @@ pcapng_pipe_open_live(int fd,
                            g_strerror(errno));
             goto error;
         }
-        pcap_src->cap_pipe_bytes_read = sizeof(struct pcapng_block_header_s);
-        memcpy(pcap_src->cap_pipe_databuf, bh, sizeof(struct pcapng_block_header_s));
+        pcap_src->cap_pipe_bytes_read = sizeof(pcapng_block_header_t);
+        memcpy(pcap_src->cap_pipe_databuf, bh, sizeof(pcapng_block_header_t));
         pcap_src->cap_pipe_fd = fd;
     }
 #endif
@@ -2258,7 +2250,6 @@ pcap_pipe_dispatch(loop_data *ld, capture_src *pcap_src, char *errmsg, size_t er
            PD_ERR } result;
 #ifdef _WIN32
     gpointer  q_status;
-    wchar_t  *err_str;
 #endif
     ssize_t   b;
     guint new_bufsize;
@@ -2462,15 +2453,10 @@ pcap_pipe_dispatch(loop_data *ld, capture_src *pcap_src, char *errmsg, size_t er
         return -1;
 
     case PD_PIPE_ERR:
-#ifdef _WIN32
-        FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS,
-                      NULL, GetLastError(), 0, (LPTSTR) &err_str, 0, NULL);
-        g_snprintf(errmsg, (gulong)errmsgl,
-                   "Error reading from pipe: %s (error %lu)",
-                   utf_16to8(err_str), GetLastError());
-        LocalFree(err_str);
-#else
         g_snprintf(errmsg, (gulong)errmsgl, "Error reading from pipe: %s",
+#ifdef _WIN32
+                   win32strerror(GetLastError()));
+#else
                    g_strerror(errno));
 #endif
         /* Fall through */
@@ -2490,10 +2476,9 @@ pcapng_pipe_dispatch(loop_data *ld, capture_src *pcap_src, char *errmsg, size_t 
            PD_ERR } result;
 #ifdef _WIN32
     gpointer  q_status;
-    wchar_t  *err_str;
 #endif
     guint new_bufsize;
-    struct pcapng_block_header_s *bh = &pcap_src->cap_pipe_info.pcapng.bh;
+    pcapng_block_header_t *bh = &pcap_src->cap_pipe_info.pcapng.bh;
 
 #ifdef LOG_CAPTURE_VERBOSE
     g_log(LOG_DOMAIN_CAPTURE_CHILD, G_LOG_LEVEL_DEBUG, "pcapng_pipe_dispatch");
@@ -2510,7 +2495,7 @@ pcapng_pipe_dispatch(loop_data *ld, capture_src *pcap_src, char *errmsg, size_t 
 #endif
 
             pcap_src->cap_pipe_state = STATE_READ_REC_HDR;
-            pcap_src->cap_pipe_bytes_to_read = sizeof(struct pcapng_block_header_s);
+            pcap_src->cap_pipe_bytes_to_read = sizeof(pcapng_block_header_t);
             pcap_src->cap_pipe_bytes_read = 0;
 
 #ifdef _WIN32
@@ -2551,7 +2536,7 @@ pcapng_pipe_dispatch(loop_data *ld, capture_src *pcap_src, char *errmsg, size_t 
         if (pcap_src->cap_pipe_bytes_read < pcap_src->cap_pipe_bytes_to_read) {
             return 0;
         }
-        memcpy(bh, pcap_src->cap_pipe_databuf, sizeof(struct pcapng_block_header_s));
+        memcpy(bh, pcap_src->cap_pipe_databuf, sizeof(pcapng_block_header_t));
         result = PD_REC_HDR_READ;
         break;
 
@@ -2661,7 +2646,7 @@ pcapng_pipe_dispatch(loop_data *ld, capture_src *pcap_src, char *errmsg, size_t 
         }
 
         /* The record always has at least the block total length following the header */
-        if (bh->block_total_length < sizeof(struct pcapng_block_header_s)+sizeof(guint32)) {
+        if (bh->block_total_length < sizeof(pcapng_block_header_t)+sizeof(guint32)) {
             g_snprintf(errmsg, (gulong)errmsgl,
                        "malformed pcapng block_total_length < minimum");
             pcap_src->cap_pipe_err = PIPEOF;
@@ -2684,15 +2669,10 @@ pcapng_pipe_dispatch(loop_data *ld, capture_src *pcap_src, char *errmsg, size_t 
         return -1;
 
     case PD_PIPE_ERR:
-#ifdef _WIN32
-        FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS,
-                      NULL, GetLastError(), 0, (LPTSTR) &err_str, 0, NULL);
-        g_snprintf(errmsg, (gulong)errmsgl,
-                   "Error reading from pipe: %s (error %lu)",
-                   utf_16to8(err_str), GetLastError());
-        LocalFree(err_str);
-#else
         g_snprintf(errmsg, (gulong)errmsgl, "Error reading from pipe: %s",
+#ifdef _WIN32
+                   win32strerror(GetLastError()));
+#else
                    g_strerror(errno));
 #endif
         /* Fall through */
@@ -2718,59 +2698,7 @@ capture_loop_open_input(capture_options *capture_opts, loop_data *ld,
     interface_options  *interface_opts;
     capture_src        *pcap_src;
     guint               i;
-#ifdef _WIN32
-    int                 err;
-    WORD                wVersionRequested;
-    WSADATA             wsaData;
-#endif
 
-/* XXX - opening Winsock on tshark? */
-
-    /* Initialize Windows Socket if we are in a Win32 OS
-       This needs to be done before querying the interface for network/netmask */
-#ifdef _WIN32
-    /* XXX - do we really require 1.1 or earlier?
-       Are there any versions that support only 2.0 or higher? */
-    wVersionRequested = MAKEWORD(1, 1);
-    err = WSAStartup(wVersionRequested, &wsaData);
-    if (err != 0) {
-        switch (err) {
-
-        case WSASYSNOTREADY:
-            g_snprintf(errmsg, (gulong) errmsg_len,
-                       "Couldn't initialize Windows Sockets: Network system not ready for network communication");
-            break;
-
-        case WSAVERNOTSUPPORTED:
-            g_snprintf(errmsg, (gulong) errmsg_len,
-                       "Couldn't initialize Windows Sockets: Windows Sockets version %u.%u not supported",
-                       LOBYTE(wVersionRequested), HIBYTE(wVersionRequested));
-            break;
-
-        case WSAEINPROGRESS:
-            g_snprintf(errmsg, (gulong) errmsg_len,
-                       "Couldn't initialize Windows Sockets: Blocking operation is in progress");
-            break;
-
-        case WSAEPROCLIM:
-            g_snprintf(errmsg, (gulong) errmsg_len,
-                       "Couldn't initialize Windows Sockets: Limit on the number of tasks supported by this WinSock implementation has been reached");
-            break;
-
-        case WSAEFAULT:
-            g_snprintf(errmsg, (gulong) errmsg_len,
-                       "Couldn't initialize Windows Sockets: Bad pointer passed to WSAStartup");
-            break;
-
-        default:
-            g_snprintf(errmsg, (gulong) errmsg_len,
-                       "Couldn't initialize Windows Sockets: error %d", err);
-            break;
-        }
-        g_snprintf(secondary_errmsg, (gulong) secondary_errmsg_len, please_report_bug());
-        return FALSE;
-    }
-#endif
     if ((use_threads == FALSE) &&
         (capture_opts->ifaces->len > 1)) {
         g_snprintf(errmsg, (gulong) errmsg_len,
@@ -3009,11 +2937,6 @@ static void capture_loop_close_input(loop_data *ld)
     }
 
     ld->go = FALSE;
-
-#ifdef _WIN32
-    /* Shut down windows sockets */
-    WSACleanup();
-#endif
 }
 
 
@@ -3074,9 +2997,9 @@ capture_loop_init_pcapng_output(capture_options *capture_opts, loop_data *ld)
     if (ld->saved_shb) {
         /* We have a single pcapng capture interface and multiple output files. */
 
-        struct pcapng_block_header_s bh;
+        pcapng_block_header_t bh;
 
-        memcpy(&bh, ld->saved_shb, sizeof(struct pcapng_block_header_s));
+        memcpy(&bh, ld->saved_shb, sizeof(pcapng_block_header_t));
 
         successful = pcapng_write_block(ld->pdh, ld->saved_shb, bh.block_total_length, &ld->bytes_written, &err);
 
@@ -3225,23 +3148,17 @@ capture_loop_init_output(capture_options *capture_opts, loop_data *ld, char *err
     if (ld->pdh == NULL) {
         /* We couldn't set up to write to the capture file. */
         /* XXX - use cf_open_error_message from tshark instead? */
-        switch (err) {
-
-        default:
-            if (err < 0) {
-                g_snprintf(errmsg, errmsg_len,
-                           "The file to which the capture would be"
-                           " saved (\"%s\") could not be opened: Error %d.",
-                           capture_opts->save_file, err);
-            } else {
-                g_snprintf(errmsg, errmsg_len,
-                           "The file to which the capture would be"
-                           " saved (\"%s\") could not be opened: %s.",
-                           capture_opts->save_file, g_strerror(err));
-            }
-            break;
+        if (err < 0) {
+            g_snprintf(errmsg, errmsg_len,
+                       "The file to which the capture would be"
+                       " saved (\"%s\") could not be opened: Error %d.",
+                       capture_opts->save_file, err);
+        } else {
+            g_snprintf(errmsg, errmsg_len,
+                       "The file to which the capture would be"
+                       " saved (\"%s\") could not be opened: %s.",
+                       capture_opts->save_file, g_strerror(err));
         }
-
         return FALSE;
     }
 
@@ -4379,7 +4296,7 @@ capture_loop_wrote_one_packet(capture_src *pcap_src) {
 
 /* one pcapng block was captured, process it */
 static void
-capture_loop_write_pcapng_cb(capture_src *pcap_src, const struct pcapng_block_header_s *bh, u_char *pd)
+capture_loop_write_pcapng_cb(capture_src *pcap_src, const pcapng_block_header_t *bh, u_char *pd)
 {
     int          err;
 
@@ -4559,7 +4476,7 @@ capture_loop_queue_packet_cb(u_char *pcap_src_p, const struct pcap_pkthdr *phdr,
 
 /* one pcapng block was captured, queue it */
 static void
-capture_loop_queue_pcapng_cb(capture_src *pcap_src, const struct pcapng_block_header_s *bh, u_char *pd)
+capture_loop_queue_pcapng_cb(capture_src *pcap_src, const pcapng_block_header_t *bh, u_char *pd)
 {
     pcap_queue_element *queue_element;
     gboolean            limit_reached;
@@ -4691,6 +4608,7 @@ get_dumpcap_runtime_info(GString *str)
 int
 main(int argc, char *argv[])
 {
+    char             *err_msg;
     int               opt;
     static const struct option long_options[] = {
         {"help", no_argument, NULL, 'h'},
@@ -4701,10 +4619,7 @@ main(int argc, char *argv[])
 
     gboolean          arg_error             = FALSE;
 
-#ifdef _WIN32
-    int               result;
-    WSADATA           wsaData;
-#else
+#ifndef _WIN32
     struct sigaction  action, oldaction;
 #endif
 
@@ -4877,16 +4792,20 @@ main(int argc, char *argv[])
     /* ... and also load the packet.dll from wpcap */
     /* XXX - currently not required, may change later. */
     /*wpcap_packet_load();*/
+#endif
 
-    /* Start windows sockets */
-    result = WSAStartup( MAKEWORD( 1, 1 ), &wsaData );
-    if (result != 0)
+    err_msg = ws_init_sockets();
+    if (err_msg != NULL)
     {
         g_log(LOG_DOMAIN_CAPTURE_CHILD, G_LOG_LEVEL_ERROR,
-                          "ERROR: WSAStartup failed with error: %d", result);
+                          "ERROR: %s", err_msg);
+        g_free(err_msg);
+        g_log(LOG_DOMAIN_CAPTURE_CHILD, G_LOG_LEVEL_ERROR,
+                          "%s", please_report_bug());
         exit_main(1);
     }
 
+#ifdef _WIN32
     /* Set handler for Ctrl+C key */
     SetConsoleCtrlHandler(capture_cleanup_handler, TRUE);
 #else

@@ -16,6 +16,8 @@
 #include <wsutil/interface.h>
 #include <wsutil/strtoi.h>
 #include <wsutil/filesystem.h>
+#include <wsutil/privileges.h>
+#include <wsutil/please_report_bug.h>
 #include <extcap/ssh-base.h>
 #include <writecap/pcapio.h>
 
@@ -174,7 +176,7 @@ static int wait_until_data(ssh_channel channel, const guint32 count)
 	return EXIT_SUCCESS;
 }
 
-static int parse_line(char* packet, unsigned* offset, char* line, int status)
+static int parse_line(guint8* packet, unsigned* offset, char* line, int status)
 {
 	char** parts;
 	char** part;
@@ -225,7 +227,7 @@ static void ssh_loop_read(ssh_channel channel, FILE* fp, const guint32 count)
 	char chr;
 	unsigned offset = 0;
 	unsigned packet_size = 0;
-	char* packet;
+	guint8* packet;
 	time_t curtime = time(NULL);
 	int err;
 	guint64 bytes_written;
@@ -233,7 +235,7 @@ static void ssh_loop_read(ssh_channel channel, FILE* fp, const guint32 count)
 	int status = CISCODUMP_PARSER_STARTING;
 
 	/* This is big enough to put on the heap */
-	packet = (char*)g_malloc(PACKET_MAX_SIZE);
+	packet = (guint8*)g_malloc(PACKET_MAX_SIZE);
 
 	do {
 		if (ssh_channel_read_timeout(channel, &chr, 1, FALSE, SSH_READ_TIMEOUT) == SSH_ERROR) {
@@ -517,6 +519,7 @@ static int list_config(char *interface, unsigned int remote_port)
 
 int main(int argc, char *argv[])
 {
+	char* err_msg;
 	int result;
 	int option_idx = 0;
 	ssh_params_t* ssh_params = ssh_params_new();
@@ -528,9 +531,21 @@ int main(int argc, char *argv[])
 	char* help_url;
 	char* help_header = NULL;
 
-#ifdef _WIN32
-	WSADATA wsaData;
-#endif  /* _WIN32 */
+	/*
+	 * Get credential information for later use.
+	 */
+	init_process_policies();
+
+	/*
+	 * Attempt to get the pathname of the directory containing the
+	 * executable file.
+	 */
+	err_msg = init_progfile_dir(argv[0]);
+	if (err_msg != NULL) {
+		g_warning("Can't get pathname of directory containing the captype program: %s.",
+			err_msg);
+		g_free(err_msg);
+	}
 
 	help_url = data_file_url("ciscodump.html");
 	extcap_base_set_util_info(extcap_conf, argv[0], CISCODUMP_VERSION_MAJOR, CISCODUMP_VERSION_MINOR,
@@ -670,13 +685,13 @@ int main(int argc, char *argv[])
 		goto end;
 	}
 
-#ifdef _WIN32
-	result = WSAStartup(MAKEWORD(1,1), &wsaData);
-	if (result != 0) {
-		g_warning("ERROR: WSAStartup failed with error: %d", result);
+	err_msg = ws_init_sockets();
+	if (err_msg != NULL) {
+		g_warning("ERROR: %s", err_msg);
+                g_free(err_msg);
+		g_warning("%s", please_report_bug());
 		goto end;
 	}
-#endif  /* _WIN32 */
 
 	if (extcap_conf->capture) {
 		if (!ssh_params->host) {

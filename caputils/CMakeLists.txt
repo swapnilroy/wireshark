@@ -50,6 +50,7 @@ add_library(caputils STATIC
 target_link_libraries(caputils
 	PUBLIC
 		wsutil
+		$<$<BOOL:${PCAP_FOUND}>:pcap::pcap>
 	PRIVATE
 		${NL_LIBRARIES}
 )
@@ -71,7 +72,6 @@ CHECKAPI(
 	NAME
 	  caputils-base
 	SWITCHES
-	  -g deprecated-gtk
 	SOURCES
 	  ${CAPUTILS_SRC}
 )
@@ -79,7 +79,7 @@ CHECKAPI(
 	NAME
 	  caputils-todo
 	SWITCHES
-	  -M -g deprecated-gtk-todo
+	  -M
 	SOURCES
 	  ${CAPUTILS_SRC}
 )

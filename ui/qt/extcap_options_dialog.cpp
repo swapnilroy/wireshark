@@ -402,24 +402,20 @@ void ExtcapOptionsDialog::on_buttonBox_helpRequested()
 
     QUrl help_url(interface_help);
 
-    /* The help is not a local file, open it and exit */
-    if (help_url.scheme().compare("file") != 0) {
-        QDesktopServices::openUrl(help_url);
-        return;
-    }
-
-    /* The help information is a file url and has been provided as-is by the extcap.
-       Before attempting to open the it, check if it actually exists.
-    */
-    QFileInfo help_file(help_url.path());
-    if ( !help_file.exists() )
-    {
-        QMessageBox::warning(this, tr("Extcap Help cannot be found"),
+    /* Check the existence for a local file */
+    if (help_url.isLocalFile()) {
+        QFileInfo help_file(help_url.toLocalFile());
+        if (!help_file.exists()) {
+            QMessageBox::warning(this, tr("Extcap Help cannot be found"),
                 QString(tr("The help for the extcap interface %1 cannot be found. Given file: %2"))
                     .arg(device->name).arg(help_url.path()),
                 QMessageBox::Ok);
+            return;
+        }
     }
 
+    /* We have an actual url or an existing local file. Let's open it. */
+    QDesktopServices::openUrl(help_url);
 }
 
 bool ExtcapOptionsDialog::saveOptionToCaptureInfo()
@@ -447,7 +443,9 @@ bool ExtcapOptionsDialog::saveOptionToCaptureInfo()
             continue;
 
         gchar * call_string = g_strdup(call.toStdString().c_str());
-        gchar * value_string = g_strdup(value.toStdString().c_str());
+        gchar * value_string = NULL;
+        if (value.length() > 0)
+            value_string = g_strdup(value.toStdString().c_str());
 
         g_hash_table_insert(ret_args, call_string, value_string );
     }
@@ -543,7 +541,7 @@ void ExtcapOptionsDialog::resetValues()
     }
 }
 
-GHashTable *ExtcapOptionsDialog::getArgumentSettings(bool useCallsAsKey)
+GHashTable *ExtcapOptionsDialog::getArgumentSettings(bool useCallsAsKey, bool includeEmptyValues)
 {
     GHashTable * entries = g_hash_table_new(g_str_hash, g_str_equal);
     ExtcapArgumentList::const_iterator iter;
@@ -554,6 +552,7 @@ GHashTable *ExtcapOptionsDialog::getArgumentSettings(bool useCallsAsKey)
     for(iter = extcapArguments.constBegin(); iter != extcapArguments.constEnd(); ++iter)
     {
         ExtcapArgument * argument = (ExtcapArgument *)(*iter);
+        bool isBoolflag = false;
 
         /* The dynamic casts are necessary, because we come here using the Signal/Slot system
          * of Qt, and -in short- Q_OBJECT classes cannot be multiple inherited. Another possibility
@@ -562,6 +561,7 @@ GHashTable *ExtcapOptionsDialog::getArgumentSettings(bool useCallsAsKey)
         if ( dynamic_cast<ExtArgBool *>((*iter)) != NULL)
         {
             value = ((ExtArgBool *)*iter)->prefValue();
+            isBoolflag = true;
         }
         else if ( dynamic_cast<ExtArgRadio *>((*iter)) != NULL)
         {
@@ -598,9 +598,9 @@ GHashTable *ExtcapOptionsDialog::getArgumentSettings(bool useCallsAsKey)
         if ( useCallsAsKey )
             key = argument->call();
 
-        if (key.length() > 0)
+        if ( ( key.length() > 0 ) && ( includeEmptyValues || isBoolflag || value.length() > 0 ) )
         {
-            gchar * val = g_strdup(value.length() == 0 ? " " : value.toStdString().c_str());
+            gchar * val = g_strdup(value.toStdString().c_str());
 
             g_hash_table_insert(entries, g_strdup(key.toStdString().c_str()), val);
         }
@@ -635,7 +635,7 @@ ExtcapValueList ExtcapOptionsDialog::loadValuesFor(int argNum, QString argumentN
     if ( argcall.startsWith("--") )
         argcall = argcall.right(argcall.size()-2);
 
-    GHashTable * entries = getArgumentSettings(true);
+    GHashTable * entries = getArgumentSettings(true, false);
 
     values = extcap_get_if_configuration_values(this->device_name.toStdString().c_str(), argcall.toStdString().c_str(), entries);
 

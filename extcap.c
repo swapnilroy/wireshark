@@ -147,9 +147,7 @@ thread_pool_wait(thread_pool_t *pool)
     while (pool->count != 0) {
         g_cond_wait(&pool->cond, &pool->data_mutex);
     }
-    g_cond_clear(&pool->cond);
     g_mutex_unlock(&pool->data_mutex);
-    g_mutex_clear(&pool->data_mutex);
 }
 
 static GHashTable *
@@ -189,7 +187,8 @@ extcap_get_descriptions(plugin_description_callback callback, void *callback_dat
     GPtrArray *tools_array = g_ptr_array_new();
 
     if (tools && g_hash_table_size(tools) > 0) {
-        GList * walker = g_list_first(g_hash_table_get_keys(tools));
+        GList * keys = g_hash_table_get_keys(tools);
+        GList * walker = g_list_first(keys);
         while (walker && walker->data) {
             extcap_info * tool = (extcap_info *)g_hash_table_lookup(tools, walker->data);
             if (tool) {
@@ -197,6 +196,7 @@ extcap_get_descriptions(plugin_description_callback callback, void *callback_dat
             }
             walker = g_list_next(walker);
         }
+        g_list_free(keys);
     }
 
     g_ptr_array_sort(tools_array, compare_tools);
@@ -284,37 +284,6 @@ extcap_find_interface_for_ifname(const gchar *ifname)
     }
 
     return result;
-}
-
-static void
-extcap_free_toolbar_value(iface_toolbar_value *value)
-{
-    if (!value)
-    {
-        return;
-    }
-
-    g_free(value->value);
-    g_free(value->display);
-    g_free(value);
-}
-
-static void
-extcap_free_toolbar_control(iface_toolbar_control *control)
-{
-    if (!control)
-    {
-        return;
-    }
-
-    g_free(control->display);
-    g_free(control->validation);
-    g_free(control->tooltip);
-    if (control->ctrl_type == INTERFACE_TYPE_STRING) {
-        g_free(control->default_value.string);
-    }
-    g_list_free_full(control->values, (GDestroyNotify)extcap_free_toolbar_value);
-    g_free(control);
 }
 
 static void
@@ -511,6 +480,9 @@ extcap_run_all(const char *argv[], extcap_run_cb_t output_cb, gsize data_size, g
 
     /* Wait for all (sub)tasks to complete. */
     thread_pool_wait(&pool);
+
+    g_mutex_clear(&pool.data_mutex);
+    g_cond_clear(&pool.cond);
     g_thread_pool_free(pool.pool, FALSE, TRUE);
 
     g_log(LOG_DOMAIN_CAPTURE, G_LOG_LEVEL_DEBUG, "extcap: completed discovery of %d tools in %.3fms",
@@ -995,13 +967,15 @@ extcap_get_if_configuration_values(const char * ifname, const char * argname, GH
         if ( arguments )
         {
             GList * keys = g_hash_table_get_keys(arguments);
-            while ( keys )
+            GList * walker = g_list_first(keys);
+            while ( walker )
             {
-                const gchar * key_data = (const gchar *)keys->data;
+                const gchar * key_data = (const gchar *)walker->data;
                 args = g_list_append(args, g_strdup(key_data));
                 args = g_list_append(args, g_strdup((const gchar *)g_hash_table_lookup(arguments, key_data)));
-                keys = g_list_next(keys);
+                walker = g_list_next(walker);
             }
+            g_list_free(keys);
         }
 
         extcap_run_one(interface, args, cb_reload_preference, &ret, NULL);
@@ -1149,12 +1123,14 @@ extcap_has_toolbar(const char *ifname)
     for (GList *walker = toolbar_list; walker; walker = walker->next)
     {
         iface_toolbar *toolbar = (iface_toolbar *) walker->data;
-        if (g_list_find_custom(toolbar->ifnames, ifname, (GCompareFunc) strcmp))
+        if (g_list_find_custom(toolbar->ifnames, ifname, (GCompareFunc) g_strcmp0))
         {
+            g_list_free(toolbar_list);
             return TRUE;
         }
     }
 
+    g_list_free(toolbar_list);
     return FALSE;
 }
 
@@ -2002,6 +1978,7 @@ extcap_load_interface_list(void)
             iface_toolbar *toolbar = (iface_toolbar *) walker->data;
             iface_toolbar_remove(toolbar->menu_title);
         }
+        g_list_free(toolbar_list);
         g_hash_table_remove_all(_toolbars);
     } else {
         _toolbars = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, extcap_free_toolbar);

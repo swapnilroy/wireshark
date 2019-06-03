@@ -1395,8 +1395,8 @@ void proto_report_dissector_bug(const char *format, ...)
 
 /* We could probably get away with changing is_error to a minimum length value. */
 static void
-report_type_length_mismatch(proto_tree *tree, const gchar *descr, int length, gboolean is_error) {
-
+report_type_length_mismatch(proto_tree *tree, const gchar *descr, int length, gboolean is_error)
+{
 	if (is_error) {
 		expert_add_info_format(NULL, tree, &ei_type_length_mismatch_error, "Trying to fetch %s with length %d", descr, length);
 	} else {
@@ -1664,11 +1664,7 @@ get_uint_string_value(wmem_allocator_t *scope, proto_tree *tree,
 	const guint8 *value;
 
 	/* I believe it's ok if this is called with a NULL tree */
-	if (encoding & ENC_ZIGBEE) {
-		n = get_uint_value(tree, tvb, start, length, encoding);
-	} else {
-		n = get_uint_value(tree, tvb, start, length, encoding & ~ENC_CHARENCODING_MASK);
-	}
+	n = get_uint_value(tree, tvb, start, length, encoding & ~ENC_CHARENCODING_MASK);
 	value = tvb_get_string_enc(scope, tvb, start + length, n, encoding);
 	length += n;
 	*ret_length = length;
@@ -5608,11 +5604,7 @@ get_full_length(header_field_info *hfinfo, tvbuff_t *tvb, const gint start,
 		break;
 
 	case FT_UINT_STRING:
-		if (encoding & ENC_ZIGBEE) {
-			n = get_uint_value(NULL, tvb, start, length, encoding);
-		} else {
-			n = get_uint_value(NULL, tvb, start, length, encoding & ~ENC_CHARENCODING_MASK);
-		}
+		n = get_uint_value(NULL, tvb, start, length, encoding & ~ENC_CHARENCODING_MASK);
 		item_length += n;
 		break;
 
@@ -10269,7 +10261,7 @@ proto_registrar_dump_fieldcount(void)
 static void
 elastic_add_base_mapping(json_dumper *dumper)
 {
-	json_dumper_set_member_name(dumper, "template");
+	json_dumper_set_member_name(dumper, "index_patterns");
 	json_dumper_value_string(dumper, "packets-*");
 
 	json_dumper_set_member_name(dumper, "settings");
@@ -10286,19 +10278,19 @@ ws_type_to_elastic(guint type _U_)
 		case FT_UINT16:
 		case FT_INT16:
 		case FT_INT32:
-		case FT_UINT32:
 		case FT_UINT24:
-		case FT_FRAMENUM:
-		case FT_UINT48:
-		case FT_INT48:
 		case FT_INT24:
 			return "integer";
 		case FT_INT8:
 		case FT_UINT8:
 			return "short";
+		case FT_FRAMENUM:
+		case FT_UINT32:
 		case FT_UINT40:
+		case FT_UINT48:
 		case FT_UINT56:
-		case FT_UINT64:
+		case FT_UINT64: // Actually it's not handled by 'long' elastic type.
+		case FT_INT48:
 		case FT_INT64:
 			return "long";
 		case FT_FLOAT:
@@ -10315,28 +10307,8 @@ ws_type_to_elastic(guint type _U_)
 			return "byte";
 		case FT_BOOLEAN:
 			return "boolean";
-		case FT_NONE:
-		case FT_STRING:
-		case FT_ETHER:
-		case FT_GUID:
-		case FT_OID:
-		case FT_STRINGZ:
-		case FT_UINT_STRING:
-		case FT_CHAR:
-		case FT_AX25:
-		case FT_REL_OID:
-		case FT_IEEE_11073_SFLOAT:
-		case FT_IEEE_11073_FLOAT:
-		case FT_STRINGZPAD:
-		case FT_PROTOCOL:
-		case FT_EUI64:
-		case FT_IPXNET:
-		case FT_SYSTEM_ID:
-		case FT_FCWWN:
-		case FT_VINES:
-			return "string";
 		default:
-			DISSECTOR_ASSERT_NOT_REACHED();
+			return NULL;
 	}
 }
 
@@ -10366,6 +10338,7 @@ proto_registrar_dump_elastic(const gchar* filter)
 	gchar* proto;
 	gboolean found;
 	guint j;
+	gchar* type;
 
 	/* We have filtering protocols. Extract them. */
 	if (filter) {
@@ -10386,9 +10359,9 @@ proto_registrar_dump_elastic(const gchar* filter)
 
 	json_dumper_set_member_name(&dumper, "mappings");
 	json_dumper_begin_object(&dumper); // 2.mappings
-	json_dumper_set_member_name(&dumper, "pcap_file");
+	json_dumper_set_member_name(&dumper, "doc");
 
-	json_dumper_begin_object(&dumper); // 3.pcap_file
+	json_dumper_begin_object(&dumper); // 3.doc
 	json_dumper_set_member_name(&dumper, "dynamic");
 	json_dumper_value_anyf(&dumper, "false");
 
@@ -10456,13 +10429,17 @@ proto_registrar_dump_elastic(const gchar* filter)
 				json_dumper_begin_object(&dumper); // 8.properties
 				open_object = FALSE;
 			}
-			str = g_strdup(hfinfo->abbrev);
-			json_dumper_set_member_name(&dumper, dot_to_underscore(str));
-			g_free(str);
-			json_dumper_begin_object(&dumper); // 9.hfinfo->abbrev
-			json_dumper_set_member_name(&dumper, "type");
-			json_dumper_value_string(&dumper, ws_type_to_elastic(hfinfo->type));
-			json_dumper_end_object(&dumper); // 9.hfinfo->abbrev
+			/* Skip the fields that would map into string. This is the default in elasticsearch. */
+			type = ws_type_to_elastic(hfinfo->type);
+			if (type) {
+				str = g_strdup_printf("%s_%s", prev_proto, hfinfo->abbrev);
+				json_dumper_set_member_name(&dumper, dot_to_underscore(str));
+				g_free(str);
+				json_dumper_begin_object(&dumper); // 9.hfinfo->abbrev
+				json_dumper_set_member_name(&dumper, "type");
+				json_dumper_value_string(&dumper, type);
+				json_dumper_end_object(&dumper); // 9.hfinfo->abbrev
+			}
 		}
 	}
 
@@ -10474,7 +10451,7 @@ proto_registrar_dump_elastic(const gchar* filter)
 	json_dumper_end_object(&dumper); // 6.properties
 	json_dumper_end_object(&dumper); // 5.layers
 	json_dumper_end_object(&dumper); // 4.properties
-	json_dumper_end_object(&dumper); // 3.pcap_file
+	json_dumper_end_object(&dumper); // 3.doc
 	json_dumper_end_object(&dumper); // 2.mappings
 	json_dumper_end_object(&dumper); // 1.root
 	gboolean ret = json_dumper_finish(&dumper);

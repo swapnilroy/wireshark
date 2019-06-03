@@ -56,6 +56,7 @@
 #define ISIS_CLV_MT_PORT_CAP         143 /* rfc6165, rfc7176 */
 #define ISIS_CLV_MT_CAP              144 /* rfc6329, rfc7176 */
 #define ISIS_CLV_TRILL_NEIGHBOR      145 /* rfc7176 */
+#define ISIS_CLV_BFD_ENABLED         148 /* rfc6213 */
 #define ISIS_CLV_SID_LABEL_BINDING   149 /* draft-previdi-isis-segment-routing-extensions-05 */
 #define ISIS_CLV_RESTART             211 /* draft-ietf-isis-restart-01 */
 #define ISIS_CLV_MT_IS_REACH         222 /* draft-ietf-isis-wg-multi-topology-05 */
@@ -86,7 +87,7 @@ typedef struct {
  * are only valid from with isis decodes.
  */
 extern void isis_dissect_clvs(tvbuff_t *tvb, packet_info* pinfo, proto_tree *tree, int offset,
-        const isis_clv_handle_t *opts, expert_field* expert_short_len, int len, int id_length,
+        const isis_clv_handle_t *opts, expert_field* expert_short_len, guint len, int id_length,
         int unknown_tree_id,  int tree_type, int tree_length, expert_field ei_unknown);
 
 extern void isis_dissect_nlpid_clv(tvbuff_t *tvb, proto_tree *tree,

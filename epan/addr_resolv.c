@@ -246,7 +246,6 @@ static GPtrArray* extra_hosts_files = NULL;
 static hashether_t *add_eth_name(const guint8 *addr, const gchar *name);
 static void add_serv_port_cb(const guint32 port, gpointer ptr);
 
-
 /* http://eternallyconfuzzled.com/tuts/algorithms/jsw_tut_hashing.aspx#existing
  * One-at-a-Time hash
  */
@@ -432,7 +431,9 @@ wait_for_sync_resolv(gboolean *completed) {
         nfds = ares_fds(ghba_chan, &rfds, &wfds);
         if (nfds > 0) {
             if (select(nfds, &rfds, &wfds, NULL, &tv) == -1) { /* call to select() failed */
-                fprintf(stderr, "Warning: call to select() failed, error is %s\n", g_strerror(errno));
+                /* If it's interrupted by a signal, no need to put out a message */
+                if (errno != EINTR)
+                    fprintf(stderr, "Warning: call to select() failed, error is %s\n", g_strerror(errno));
                 return;
             }
             ares_process(ghba_chan, &rfds, &wfds);
@@ -2107,9 +2108,14 @@ initialize_vlans(void)
     /* Set g_pvlan_path here, but don't actually do anything
      * with it. It's used in get_vlannamebyid()
      */
-    if (g_pvlan_path == NULL)
-        g_pvlan_path = get_persconffile_path(ENAME_VLANS, FALSE);
-
+    if (g_pvlan_path == NULL) {
+        /* Check profile directory before personal configuration */
+        g_pvlan_path = get_persconffile_path(ENAME_VLANS, TRUE);
+        if (!file_exists(g_pvlan_path)) {
+            g_free(g_pvlan_path);
+            g_pvlan_path = get_persconffile_path(ENAME_VLANS, FALSE);
+        }
+    }
 } /* initialize_vlans */
 
 static void
@@ -2776,7 +2782,9 @@ host_name_lookup_process(void) {
     nfds = ares_fds(ghba_chan, &rfds, &wfds);
     if (nfds > 0) {
         if (select(nfds, &rfds, &wfds, NULL, &tv) == -1) { /* call to select() failed */
-            fprintf(stderr, "Warning: call to select() failed, error is %s\n", g_strerror(errno));
+            /* If it's interrupted by a signal, no need to put out a message */
+            if (errno != EINTR)
+                fprintf(stderr, "Warning: call to select() failed, error is %s\n", g_strerror(errno));
             return nro;
         }
         ares_process(ghba_chan, &rfds, &wfds);
@@ -3043,6 +3051,8 @@ void host_name_lookup_reset(void)
 {
     host_name_lookup_cleanup();
     host_name_lookup_init();
+    vlan_name_lookup_cleanup();
+    initialize_vlans();
 }
 
 void
@@ -3387,7 +3397,9 @@ get_host_ipaddr(const char *host, guint32 *addrp)
         if (nfds > 0) {
             tvp = ares_timeout(ghbn_chan, &tv, &tv);
             if (select(nfds, &rfds, &wfds, NULL, tvp) == -1) { /* call to select() failed */
-                fprintf(stderr, "Warning: call to select() failed, error is %s\n", g_strerror(errno));
+                /* If it's interrupted by a signal, no need to put out a message */
+                if (errno != EINTR)
+                    fprintf(stderr, "Warning: call to select() failed, error is %s\n", g_strerror(errno));
                 return FALSE;
             }
             ares_process(ghbn_chan, &rfds, &wfds);
@@ -3452,7 +3464,9 @@ get_host_ipaddr6(const char *host, ws_in6_addr *addrp)
     if (nfds > 0) {
         tvp = ares_timeout(ghbn_chan, &tv, &tv);
         if (select(nfds, &rfds, &wfds, NULL, tvp) == -1) { /* call to select() failed */
-            fprintf(stderr, "Warning: call to select() failed, error is %s\n", g_strerror(errno));
+            /* If it's interrupted by a signal, no need to put out a message */
+            if (errno != EINTR)
+                fprintf(stderr, "Warning: call to select() failed, error is %s\n", g_strerror(errno));
             return FALSE;
         }
         ares_process(ghbn_chan, &rfds, &wfds);

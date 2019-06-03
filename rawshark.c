@@ -49,9 +49,11 @@
 #include <ui/cmdarg_err.h>
 #include <wsutil/filesystem.h>
 #include <wsutil/file_util.h>
+#include <wsutil/socket.h>
 #include <wsutil/plugins.h>
 #include <wsutil/privileges.h>
 #include <wsutil/report_message.h>
+#include <wsutil/please_report_bug.h>
 #include <ui/clopts_common.h>
 
 #include "globals.h"
@@ -134,7 +136,7 @@ static gboolean want_pcap_pkthdr;
 cf_status_t raw_cf_open(capture_file *cf, const char *fname);
 static gboolean load_cap_file(capture_file *cf);
 static gboolean process_packet(capture_file *cf, epan_dissect_t *edt, gint64 offset,
-                               wtap_rec *rec, const guchar *pd);
+                               wtap_rec *rec, Buffer *buf);
 static void show_print_file_io_error(int err);
 
 static void failure_warning_message(const char *msg_format, va_list ap);
@@ -405,15 +407,12 @@ set_link_type(const char *lt_arg) {
 int
 main(int argc, char *argv[])
 {
-    char                *init_progfile_dir_error;
+    char                *err_msg;
     int                  opt, i;
 
-#ifdef _WIN32
-    int                  result;
-    WSADATA              wsaData;
-#else
+#ifndef _WIN32
     struct rlimit limit;
-#endif  /* _WIN32 */
+#endif  /* !_WIN32 */
 
     gchar               *pipe_name = NULL;
     gchar               *rfilters[64];
@@ -470,10 +469,10 @@ main(int argc, char *argv[])
      * Attempt to get the pathname of the directory containing the
      * executable file.
      */
-    init_progfile_dir_error = init_progfile_dir(argv[0]);
-    if (init_progfile_dir_error != NULL) {
+    err_msg = init_progfile_dir(argv[0]);
+    if (err_msg != NULL) {
         fprintf(stderr, "rawshark: Can't get pathname of rawshark program: %s.\n",
-                init_progfile_dir_error);
+                err_msg);
     }
 
     /* nothing more than the standard GLib handler, but without a warning */
@@ -725,15 +724,15 @@ main(int argc, char *argv[])
         goto clean_exit;
     }
 
-#ifdef _WIN32
-    /* Start windows sockets */
-    result = WSAStartup( MAKEWORD( 1, 1 ), &wsaData );
-    if (result != 0)
+    err_msg = ws_init_sockets();
+    if (err_msg != NULL)
     {
+        cmdarg_err("%s", err_msg);
+        g_free(err_msg);
+        cmdarg_err_cont("%s", please_report_bug());
         ret = INIT_ERROR;
         goto clean_exit;
     }
-#endif /* _WIN32 */
 
     /*
      * Enabled and disabled protocols and heuristic dissectors as per
@@ -746,8 +745,6 @@ main(int argc, char *argv[])
 
     if (n_rfilters != 0) {
         for (i = 0; i < n_rfilters; i++) {
-            gchar *err_msg;
-
             if (!dfilter_compile(rfilters[i], &rfcodes[n_rfcodes], &err_msg)) {
                 cmdarg_err("%s", err_msg);
                 g_free(err_msg);
@@ -814,7 +811,7 @@ clean_exit:
 /**
  * Read data from a raw pipe.  The "raw" data consists of a libpcap
  * packet header followed by the payload.
- * @param pd [IN] A POSIX file descriptor.  Because that's _exactly_ the sort
+ * @param buf [IN] A POSIX file descriptor.  Because that's _exactly_ the sort
  *           of thing you want to use in Windows.
  * @param err [OUT] Error indicator.  Uses wiretap values.
  * @param err_info [OUT] Error message.
@@ -822,7 +819,7 @@ clean_exit:
  * @return TRUE on success, FALSE on failure.
  */
 static gboolean
-raw_pipe_read(wtap_rec *rec, guchar * pd, int *err, gchar **err_info, gint64 *data_offset) {
+raw_pipe_read(wtap_rec *rec, Buffer *buf, int *err, gchar **err_info, gint64 *data_offset) {
     struct pcap_pkthdr mem_hdr;
     struct pcaprec_hdr disk_hdr;
     ssize_t bytes_read = 0;
@@ -901,7 +898,8 @@ raw_pipe_read(wtap_rec *rec, guchar * pd, int *err, gchar **err_info, gint64 *da
         return FALSE;
     }
 
-    ptr = pd;
+    ws_buffer_assure_space(buf, bytes_needed);
+    ptr = ws_buffer_start_ptr(buf);
     while (bytes_needed > 0) {
         bytes_read = ws_read(fd, ptr, bytes_needed);
         if (bytes_read == 0) {
@@ -927,23 +925,23 @@ load_cap_file(capture_file *cf)
     gchar       *err_info = NULL;
     gint64       data_offset = 0;
 
-    guchar      *pd;
     wtap_rec     rec;
+    Buffer       buf;
     epan_dissect_t edt;
 
     wtap_rec_init(&rec);
+    ws_buffer_init(&buf, 1514);
 
     epan_dissect_init(&edt, cf->epan, TRUE, FALSE);
 
-    pd = (guchar*)g_malloc(WTAP_MAX_PACKET_SIZE_STANDARD);
-    while (raw_pipe_read(&rec, pd, &err, &err_info, &data_offset)) {
-        process_packet(cf, &edt, data_offset, &rec, pd);
+    while (raw_pipe_read(&rec, &buf, &err, &err_info, &data_offset)) {
+        process_packet(cf, &edt, data_offset, &rec, &buf);
     }
 
     epan_dissect_cleanup(&edt);
 
     wtap_rec_cleanup(&rec);
-    g_free(pd);
+    ws_buffer_free(&buf);
     if (err != 0) {
         /* Print a message noting that the read failed somewhere along the line. */
         cfile_read_failure_message("Rawshark", cf->filename, err, err_info);
@@ -955,7 +953,7 @@ load_cap_file(capture_file *cf)
 
 static gboolean
 process_packet(capture_file *cf, epan_dissect_t *edt, gint64 offset,
-               wtap_rec *rec, const guchar *pd)
+               wtap_rec *rec, Buffer *buf)
 {
     frame_data fdata;
     gboolean passed;
@@ -1007,7 +1005,7 @@ process_packet(capture_file *cf, epan_dissect_t *edt, gint64 offset,
      *not* verbose; in verbose mode, we print the protocol tree, not
      the protocol summary. */
     epan_dissect_run_with_taps(edt, cf->cd_t, rec,
-                               frame_tvbuff_new(&cf->provider, &fdata, pd),
+                               frame_tvbuff_new_buffer(&cf->provider, &fdata, buf),
                                &fdata, &cf->cinfo);
 
     frame_data_set_after_dissect(&fdata, &cum_bytes);

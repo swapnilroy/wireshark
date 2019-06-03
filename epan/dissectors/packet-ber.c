@@ -173,7 +173,7 @@ static expert_field ei_ber_unknown_field_set = EI_INIT;
 static expert_field ei_ber_missing_field_set = EI_INIT;
 static expert_field ei_ber_empty_choice = EI_INIT;
 static expert_field ei_ber_choice_not_found = EI_INIT;
-//static expert_field ei_ber_bits_unknown = EI_INIT;
+static expert_field ei_ber_bits_unknown = EI_INIT;
 static expert_field ei_ber_bits_set_padded = EI_INIT;
 static expert_field ei_ber_illegal_padding = EI_INIT;
 static expert_field ei_ber_invalid_format_generalized_time = EI_INIT;
@@ -1434,7 +1434,7 @@ proto_tree_add_debug_text("dissect BER length %d, offset %d (remaining %d)\n", t
 static reassembly_table octet_segment_reassembly_table;
 
 static int
-dissect_ber_constrained_octet_string_impl(gboolean implicit_tag, asn1_ctx_t *actx, proto_tree *tree, tvbuff_t *tvb, int offset, gint32 min_len, gint32 max_len, gint hf_id, tvbuff_t **out_tvb, guint nest_level);
+dissect_ber_constrained_octet_string_impl(gboolean implicit_tag, asn1_ctx_t *actx, proto_tree *tree, tvbuff_t *tvb, int offset, gint32 min_len, gint32 max_len, gint hf_id, tvbuff_t **out_tvb, guint nest_level, guint encoding);
 
 static int
 reassemble_octet_string(asn1_ctx_t *actx, proto_tree *tree, gint hf_id, tvbuff_t *tvb, int offset, guint32 con_len, gboolean ind, tvbuff_t **out_tvb, guint nest_level)
@@ -1466,7 +1466,7 @@ reassemble_octet_string(asn1_ctx_t *actx, proto_tree *tree, gint hf_id, tvbuff_t
     while(!fd_head) {
 
         offset = dissect_ber_constrained_octet_string_impl(FALSE, actx, NULL,
-                tvb, offset, NO_BOUND, NO_BOUND, hf_id, &next_tvb, nest_level + 1);
+                tvb, offset, NO_BOUND, NO_BOUND, hf_id, &next_tvb, nest_level + 1, 0);
 
         if (next_tvb == NULL) {
             /* Assume that we have a malformed packet. */
@@ -1542,11 +1542,11 @@ reassemble_octet_string(asn1_ctx_t *actx, proto_tree *tree, gint hf_id, tvbuff_t
 /* 8.7 Encoding of an octetstring value */
 int
 dissect_ber_constrained_octet_string(gboolean implicit_tag, asn1_ctx_t *actx, proto_tree *tree, tvbuff_t *tvb, int offset, gint32 min_len, gint32 max_len, gint hf_id, tvbuff_t **out_tvb) {
-  return dissect_ber_constrained_octet_string_impl(implicit_tag, actx, tree, tvb, offset, min_len, max_len, hf_id, out_tvb, 0);
+  return dissect_ber_constrained_octet_string_impl(implicit_tag, actx, tree, tvb, offset, min_len, max_len, hf_id, out_tvb, 0, 0);
 }
 
 static int
-dissect_ber_constrained_octet_string_impl(gboolean implicit_tag, asn1_ctx_t *actx, proto_tree *tree, tvbuff_t *tvb, int offset, gint32 min_len, gint32 max_len, gint hf_id, tvbuff_t **out_tvb, guint nest_level) {
+dissect_ber_constrained_octet_string_impl(gboolean implicit_tag, asn1_ctx_t *actx, proto_tree *tree, tvbuff_t *tvb, int offset, gint32 min_len, gint32 max_len, gint hf_id, tvbuff_t **out_tvb, guint nest_level, guint encoding) {
     gint8       ber_class;
     gboolean    pc, ind;
     gint32      tag;
@@ -1556,7 +1556,6 @@ dissect_ber_constrained_octet_string_impl(gboolean implicit_tag, asn1_ctx_t *act
     tvbuff_t   *len_tvb;
     int         len_offset;
     int         len_len;
-    guint       encoding;
     int         hoffset;
     int         end_offset;
     proto_item *it, *cause;
@@ -1696,73 +1695,82 @@ proto_tree_add_debug_text(tree, "OCTET STRING dissect_ber_octet_string(%s) enter
              *     http://kikaku.itscj.ipsj.or.jp/ISO-IR/overview.htm
              *
              * for that registry.
+             *
+             * If we've been provided with a non-zero encoding, use
+             * that; otherwise, calculate it based on the tag.  (A
+             * zero encoding is ENC_ASCII|ENC_NA/ENC_BIG_ENDIAN, which
+             * is the default, so it's OK to use here; this is for
+             * protcols such as LDAP that use OCTET STRING for UTF-8
+             * strings.)
              */
-            switch (tag) {
+            if (encoding == 0) {
+                switch (tag) {
 
-            case BER_UNI_TAG_UTF8String:
-                /*
-                 * UTF-8, obviously.
-                 */
-                encoding = ENC_UTF_8|ENC_NA;
-                break;
+                case BER_UNI_TAG_UTF8String:
+                    /*
+                     * UTF-8, obviously.
+                     */
+                    encoding = ENC_UTF_8|ENC_NA;
+                    break;
 
-            case BER_UNI_TAG_NumericString:
-            case BER_UNI_TAG_PrintableString:
-            case BER_UNI_TAG_VisibleString:
-            case BER_UNI_TAG_IA5String:
-                /*
-                 * (Subsets of) Boring Old ASCII, with no(?) ISO 2022
-                 * escape sequences.
-                 */
-                encoding = ENC_ASCII|ENC_NA;
-                break;
+                case BER_UNI_TAG_NumericString:
+                case BER_UNI_TAG_PrintableString:
+                case BER_UNI_TAG_VisibleString:
+                case BER_UNI_TAG_IA5String:
+                    /*
+                     * (Subsets of) Boring Old ASCII, with no(?) ISO 2022
+                     * escape sequences.
+                     */
+                    encoding = ENC_ASCII|ENC_NA;
+                    break;
 
-            case BER_UNI_TAG_TeletexString:
-                encoding = ENC_T61|ENC_NA;
-                break;
+                case BER_UNI_TAG_TeletexString:
+                    encoding = ENC_T61|ENC_NA;
+                    break;
 
-            case BER_UNI_TAG_VideotexString:
-                encoding = ENC_T61|ENC_NA;
-                break;
+                case BER_UNI_TAG_VideotexString:
+                    encoding = ENC_T61|ENC_NA;
+                    break;
 
-            case BER_UNI_TAG_GraphicString:
-            case BER_UNI_TAG_GeneralString:
-                /*
-                 * One of the types defined in terms of character sets
-                 * in the ISO International Register of Character Sets,
-                 * with the BER encoding being ISO 2022-based.
-                 *
-                 * XXX - treat as ASCII for now.
-                 */
-                encoding = ENC_ASCII|ENC_NA;
-                break;
+                case BER_UNI_TAG_GraphicString:
+                case BER_UNI_TAG_GeneralString:
+                    /*
+                     * One of the types defined in terms of character sets
+                     * in the ISO International Register of Character Sets,
+                     * with the BER encoding being ISO 2022-based.
+                     *
+                     * XXX - treat as ASCII for now.
+                     */
+                    encoding = ENC_ASCII|ENC_NA;
+                    break;
 
-            case BER_UNI_TAG_UniversalString:
-                /*
-                 * UCS-4.
-                 */
-                encoding = ENC_UCS_4|ENC_BIG_ENDIAN;
-                break;
+                case BER_UNI_TAG_UniversalString:
+                    /*
+                     * UCS-4.
+                     */
+                    encoding = ENC_UCS_4|ENC_BIG_ENDIAN;
+                    break;
 
-            case BER_UNI_TAG_CHARACTERSTRING:
-                /*
-                 * XXX - what's the transfer syntax?
-                 * Treat as ASCII for now.
-                 */
-                encoding = ENC_ASCII|ENC_NA;
-                break;
+                case BER_UNI_TAG_CHARACTERSTRING:
+                    /*
+                     * XXX - what's the transfer syntax?
+                     * Treat as ASCII for now.
+                     */
+                    encoding = ENC_ASCII|ENC_NA;
+                    break;
 
-            case BER_UNI_TAG_BMPString:
-                /*
-                 * UCS-2, not UTF-16; as it says, BMP, as in Basic
-                 * Multilingual Plane.
-                 */
-                encoding = ENC_UCS_2|ENC_BIG_ENDIAN;
-                break;
+                case BER_UNI_TAG_BMPString:
+                    /*
+                     * UCS-2, not UTF-16; as it says, BMP, as in Basic
+                     * Multilingual Plane.
+                     */
+                    encoding = ENC_UCS_2|ENC_BIG_ENDIAN;
+                    break;
 
-            default:
-                 encoding = ENC_BIG_ENDIAN;
-                 break;
+                default:
+                     encoding = ENC_BIG_ENDIAN;
+                     break;
+                }
             }
             it = ber_proto_tree_add_item(actx->pinfo, tree, hf_id, tvb, offset, length_remaining, encoding);
             actx->created_item = it;
@@ -1781,7 +1789,12 @@ proto_tree_add_debug_text(tree, "OCTET STRING dissect_ber_octet_string(%s) enter
 
 int
 dissect_ber_octet_string(gboolean implicit_tag, asn1_ctx_t *actx, proto_tree *tree, tvbuff_t *tvb, int offset, gint hf_id, tvbuff_t **out_tvb) {
-  return dissect_ber_constrained_octet_string(implicit_tag, actx, tree, tvb, offset, NO_BOUND, NO_BOUND, hf_id, out_tvb);
+  return dissect_ber_constrained_octet_string_impl(implicit_tag, actx, tree, tvb, offset, NO_BOUND, NO_BOUND, hf_id, out_tvb, 0, 0);
+}
+
+int
+dissect_ber_octet_string_with_encoding(gboolean implicit_tag, asn1_ctx_t *actx, proto_tree *tree, tvbuff_t *tvb, int offset, gint hf_id, tvbuff_t **out_tvb, guint encoding) {
+  return dissect_ber_constrained_octet_string_impl(implicit_tag, actx, tree, tvb, offset, NO_BOUND, NO_BOUND, hf_id, out_tvb, 0, encoding);
 }
 
 int
@@ -3928,7 +3941,7 @@ dissect_ber_constrained_bitstring(gboolean implicit_tag, asn1_ctx_t *actx, proto
     gint32      tag;
     int         identifier_offset;
     int         identifier_len;
-    guint32     len;
+    gint        len;
     guint8      pad = 0;
     int         end_offset;
     int         hoffset;
@@ -4019,42 +4032,49 @@ dissect_ber_constrained_bitstring(gboolean implicit_tag, asn1_ctx_t *actx, proto
         offset++;
         len--;
         if (hf_id >= 0) {
+            item = proto_tree_add_item(parent_tree, hf_id, tvb, offset, len, ENC_NA);
+            actx->created_item = item;
             if (named_bits) {
-                if (num_named_bits < 65) {
-                    item = proto_tree_add_item(parent_tree, hf_id, tvb, offset, len, ENC_BIG_ENDIAN);
-                    actx->created_item = item;
-                    if (ett_id != -1) {
-                        tree = proto_item_add_subtree(item, ett_id);
+                const int named_bits_bytelen = (num_named_bits + 7) / 8;
+                if (show_internal_ber_fields) {
+                    guint zero_bits_omitted = 0;
+                    if (len < named_bits_bytelen) {
+                        zero_bits_omitted = num_named_bits - ((len * 8) - pad);
+                        proto_item_append_text(item, " [%u zero bits not encoded, but displayed]", zero_bits_omitted);
                     }
-                    proto_tree_add_bitmask_list(tree, tvb, offset, len, named_bits, ENC_BIG_ENDIAN);
-                } else {
-                    item = proto_tree_add_item(parent_tree, hf_id, tvb, offset, len, ENC_BIG_ENDIAN);
-                    actx->created_item = item;
-                    if (ett_id != -1) {
-                        tree = proto_item_add_subtree(item, ett_id);
+                }
+                if (ett_id != -1) {
+                    tree = proto_item_add_subtree(item, ett_id);
+                }
+                for (int i = 0; i < named_bits_bytelen; i++) {
+                    // If less data is available than the number of named bits, then
+                    // the trailing (right) bits are assumed to be 0.
+                    guint64 value = 0;
+                    if (i < len) {
+                        value = tvb_get_guint8(tvb, offset + i);
                     }
-                    int * flags[65];
-                    int i = 0;
-                    int j = 0;
-                    int bits_to_load = 64;
-                    guint32 section_len = 8;
-                    int temp_offset = offset;
 
-                    while (j < num_named_bits){
-                        for (i = 0; i < bits_to_load; i++) {
-                            flags[i] = (int *)named_bits[j];
-                            j++;
-                        }
-                        bits_to_load = num_named_bits - j;
-                        if (bits_to_load > 64) {
-                            bits_to_load = 64;
-                        }
-                        /* TODO: Add pad bits ?*/
-                        flags[i] = NULL;
-                        proto_tree_add_bitmask_list(tree, tvb, temp_offset, section_len, (const int **)flags, ENC_BIG_ENDIAN);
-                        temp_offset += section_len;
-                        section_len = (bits_to_load + 7) / 8;
+                    // Process 8 bits at a time instead of 64, each field masks a
+                    // single byte.
+                    const int bit_offset = 8 * i;
+                    const int** section_named_bits = named_bits + bit_offset;
+                    int* flags[9];
+                    if (num_named_bits - bit_offset > 8) {
+                        memcpy(&flags[0], named_bits + bit_offset, 8 * sizeof(int*));
+                        flags[8] = NULL;
+                        section_named_bits = (const int** )flags;
                     }
+
+                    // TODO should non-zero pad bits be masked from the value?
+                    // When trailing zeroes are not present in the data, mark the
+                    // last byte for the lack of a better alternative.
+                    proto_tree_add_bitmask_list_value(tree, tvb, offset + MIN(i, len - 1), 1, section_named_bits, value);
+                }
+                // If more data is available than the number of named bits, then
+                // either the spec was updated or the packet is malformed.
+                if (named_bits_bytelen < len) {
+                    expert_add_info_format(actx->pinfo, item, &ei_ber_bits_unknown, "Unknown bit(s): 0x%s",
+                        tvb_bytes_to_str(wmem_packet_scope(), tvb, offset + named_bits_bytelen, len - named_bits_bytelen));
                 }
             }
         }
@@ -4500,7 +4520,7 @@ proto_register_ber(void)
         { &ei_ber_missing_field_set, { "ber.error.missing_field.set", PI_MALFORMED, PI_WARN, "BER Error: Missing field in SET", EXPFILL }},
         { &ei_ber_empty_choice, { "ber.error.empty_choice", PI_MALFORMED, PI_WARN, "BER Error: Empty choice was found", EXPFILL }},
         { &ei_ber_choice_not_found, { "ber.error.choice_not_found", PI_MALFORMED, PI_WARN, "BER Error: This choice field was not found", EXPFILL }},
-        /*{ &ei_ber_bits_unknown, { "ber.error.bits_unknown", PI_UNDECODED, PI_WARN, "BER Error: Bits unknown", EXPFILL }},*/
+        { &ei_ber_bits_unknown, { "ber.error.bits_unknown", PI_UNDECODED, PI_WARN, "BER Error: Bits unknown", EXPFILL }},
         { &ei_ber_bits_set_padded, { "ber.error.bits_set_padded", PI_UNDECODED, PI_WARN, "BER Error: Bits set in padded area", EXPFILL }},
         { &ei_ber_illegal_padding, { "ber.error.illegal_padding", PI_UNDECODED, PI_WARN, "Illegal padding", EXPFILL }},
         { &ei_ber_invalid_format_generalized_time, { "ber.error.invalid_format.generalized_time", PI_MALFORMED, PI_WARN, "BER Error: GeneralizedTime invalid format", EXPFILL }},

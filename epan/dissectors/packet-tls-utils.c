@@ -1358,6 +1358,7 @@ static const ssl_alpn_prefix_match_protocol_t ssl_alpn_prefix_match_protocols[] 
 const value_string compress_certificate_algorithm_vals[] = {
     { 1, "zlib" },
     { 2, "brotli" },
+    { 3, "zstd" },
     { 0, NULL }
 };
 
@@ -4597,6 +4598,20 @@ ssl_packet_from_server(SslSession *session, dissector_table_t table, packet_info
 
 
 /* Links SSL records with the real packet data. {{{ */
+SslPacketInfo *
+tls_add_packet_info(gint proto, packet_info *pinfo, guint8 curr_layer_num_ssl)
+{
+    SslPacketInfo *pi = (SslPacketInfo *)p_get_proto_data(wmem_file_scope(), pinfo, proto, curr_layer_num_ssl);
+    if (!pi) {
+        pi = wmem_new0(wmem_file_scope(), SslPacketInfo);
+        pi->srcport = pinfo->srcport;
+        pi->destport = pinfo->destport;
+        p_add_proto_data(wmem_file_scope(), pinfo, proto, curr_layer_num_ssl, pi);
+    }
+
+    return pi;
+}
+
 /**
  * Remembers the decrypted TLS record fragment (TLSInnerPlaintext in TLS 1.3) to
  * avoid the need for a decoder in the second pass. Additionally, it remembers
@@ -4615,16 +4630,7 @@ void
 ssl_add_record_info(gint proto, packet_info *pinfo, const guchar *data, gint data_len, gint record_id, SslFlow *flow, ContentType type, guint8 curr_layer_num_ssl)
 {
     SslRecordInfo* rec, **prec;
-    SslPacketInfo* pi;
-
-    pi = (SslPacketInfo *)p_get_proto_data(wmem_file_scope(), pinfo, proto, curr_layer_num_ssl);
-    if (!pi)
-    {
-        pi = wmem_new0(wmem_file_scope(), SslPacketInfo);
-        pi->srcport = pinfo->srcport;
-        pi->destport = pinfo->destport;
-        p_add_proto_data(wmem_file_scope(), pinfo, proto, curr_layer_num_ssl, pi);
-    }
+    SslPacketInfo *pi = tls_add_packet_info(proto, pinfo, curr_layer_num_ssl);
 
     rec = wmem_new(wmem_file_scope(), SslRecordInfo);
     rec->plain_data = (guchar *)wmem_memdup(wmem_file_scope(), data, data_len);
@@ -4633,9 +4639,6 @@ ssl_add_record_info(gint proto, packet_info *pinfo, const guchar *data, gint dat
     rec->type = type;
     rec->next = NULL;
 
-    /* TODO allow Handshake records also to be reassembled. There needs to be
-     * one "flow" for each record type (appdata, handshake). "seq" for the
-     * record should then be relative within this flow. */
     if (flow && type == SSL_ID_APP_DATA) {
         rec->seq = flow->byte_seq;
         rec->flow = flow;
@@ -4691,13 +4694,6 @@ ssl_common_init(ssl_master_key_map_t *mk_map,
     mk_map->tls13_exporter = g_hash_table_new(ssl_hash, ssl_equal);
     ssl_data_alloc(decrypted_data, 32);
     ssl_data_alloc(compressed_data, 32);
-
-    /* QUIC keys. */
-    mk_map->quic_client_early = g_hash_table_new(ssl_hash, ssl_equal);
-    mk_map->quic_client_handshake = g_hash_table_new(ssl_hash, ssl_equal);
-    mk_map->quic_server_handshake = g_hash_table_new(ssl_hash, ssl_equal);
-    mk_map->quic_client_appdata = g_hash_table_new(ssl_hash, ssl_equal);
-    mk_map->quic_server_appdata = g_hash_table_new(ssl_hash, ssl_equal);
 }
 
 void
@@ -4719,13 +4715,6 @@ ssl_common_cleanup(ssl_master_key_map_t *mk_map, FILE **ssl_keylog_file,
 
     g_free(decrypted_data->data);
     g_free(compressed_data->data);
-
-    /* QUIC keys */
-    g_hash_table_destroy(mk_map->quic_client_early);
-    g_hash_table_destroy(mk_map->quic_client_handshake);
-    g_hash_table_destroy(mk_map->quic_server_handshake);
-    g_hash_table_destroy(mk_map->quic_client_appdata);
-    g_hash_table_destroy(mk_map->quic_server_appdata);
 
     /* close the previous keylog file now that the cache are cleared, this
      * allows the cache to be filled with the full keylog file contents. */
@@ -5145,20 +5134,15 @@ ssl_compile_keyfile_regex(void)
         ")(?<master_secret>" OCTET "{" G_STRINGIFY(SSL_MASTER_SECRET_LENGTH) "})"
         "|(?"
         /* TLS 1.3 Client Random to Derived Secrets mapping. */
-        ":CLIENT_EARLY_TRAFFIC_SECRET (?<client_early>" OCTET "{32})"
-        "|CLIENT_HANDSHAKE_TRAFFIC_SECRET (?<client_handshake>" OCTET "{32})"
-        "|SERVER_HANDSHAKE_TRAFFIC_SECRET (?<server_handshake>" OCTET "{32})"
-        "|CLIENT_TRAFFIC_SECRET_0 (?<client_appdata>" OCTET "{32})"
-        "|SERVER_TRAFFIC_SECRET_0 (?<server_appdata>" OCTET "{32})"
+        /* Since draft-ietf-quic-tls-17 keys are the same as TLS 1.3.
+         * TODO remove this old format. */
+        ":(?:QUIC_)?CLIENT_EARLY_TRAFFIC_SECRET (?<client_early>" OCTET "{32})"
+        "|(?:QUIC_)?CLIENT_HANDSHAKE_TRAFFIC_SECRET (?<client_handshake>" OCTET "{32})"
+        "|(?:QUIC_)?SERVER_HANDSHAKE_TRAFFIC_SECRET (?<server_handshake>" OCTET "{32})"
+        "|(?:QUIC_)?CLIENT_TRAFFIC_SECRET_0 (?<client_appdata>" OCTET "{32})"
+        "|(?:QUIC_)?SERVER_TRAFFIC_SECRET_0 (?<server_appdata>" OCTET "{32})"
         "|EARLY_EXPORTER_SECRET (?<early_exporter>" OCTET "{32})"
         "|EXPORTER_SECRET (?<exporter>" OCTET "{32})"
-        /* QUIC (draft >= -13) Client Random to Derived Secrets mapping.
-         * EXPERIMENTAL, subject to change based on QUIC changes! */
-        "|QUIC_CLIENT_EARLY_TRAFFIC_SECRET (?<quic_client_early>" OCTET "{32})"
-        "|QUIC_CLIENT_HANDSHAKE_TRAFFIC_SECRET (?<quic_client_handshake>" OCTET "{32})"
-        "|QUIC_SERVER_HANDSHAKE_TRAFFIC_SECRET (?<quic_server_handshake>" OCTET "{32})"
-        "|QUIC_CLIENT_TRAFFIC_SECRET_0 (?<quic_client_appdata>" OCTET "{32})"
-        "|QUIC_SERVER_TRAFFIC_SECRET_0 (?<quic_server_appdata>" OCTET "{32})"
         ") (?<derived_secret>" OCTET "+)";
 #undef OCTET
     static GRegex *regex = NULL;
@@ -5220,12 +5204,6 @@ tls_keylog_process_lines(const ssl_master_key_map_t *mk_map, const guint8 *data,
         { "server_appdata",     mk_map->tls13_server_appdata },
         { "early_exporter",     mk_map->tls13_early_exporter },
         { "exporter",           mk_map->tls13_exporter },
-        /* QUIC map from Client Random to derived secret. */
-        { "quic_client_early",      mk_map->quic_client_early },
-        { "quic_client_handshake",  mk_map->quic_client_handshake },
-        { "quic_server_handshake",  mk_map->quic_server_handshake },
-        { "quic_client_appdata",    mk_map->quic_client_appdata },
-        { "quic_server_appdata",    mk_map->quic_server_appdata },
     };
 
     /* The format of the file is a series of records with one of the following formats:
@@ -6631,6 +6609,7 @@ ssl_dissect_hnd_hello_ext_quic_transport_parameters(ssl_common_dissect_t *hf, tv
      *     opaque value<0..2^16-1>;
      *  } TransportParameter;
      *
+     *  // draft -18 and before
      *  struct {
      *      select (Handshake.msg_type) {
      *          case client_hello:
@@ -6642,6 +6621,9 @@ ssl_dissect_hnd_hello_ext_quic_transport_parameters(ssl_common_dissect_t *hf, tv
      *      };
      *      TransportParameter parameters<0..2^16-1>;
      *  } TransportParameters;
+     *
+     *  // since draft 19
+     *  TransportParameter TransportParameters<0..2^16-1>;
      *
      *  // draft -17 and before
      *  struct {
@@ -6662,39 +6644,46 @@ ssl_dissect_hnd_hello_ext_quic_transport_parameters(ssl_common_dissect_t *hf, tv
      *    opaque statelessResetToken[16];
      *  } PreferredAddress;
      */
-    switch (hnd_type) {
-    case SSL_HND_CLIENT_HELLO:
-        proto_tree_add_item(tree, hf->hf.hs_ext_quictp_initial_version,
-                            tvb, offset, 4, ENC_BIG_ENDIAN);
-        offset += 4;
-        break;
-    case SSL_HND_ENCRYPTED_EXTENSIONS:
-        proto_tree_add_item(tree, hf->hf.hs_ext_quictp_negotiated_version,
-                            tvb, offset, 4, ENC_BIG_ENDIAN);
-        offset += 4;
-        /* QuicVersion supported_versions<4..2^8-4>;*/
-        if (!ssl_add_vector(hf, tvb, pinfo, tree, offset, offset_end, &supported_versions_length,
-                            hf->hf.hs_ext_quictp_supported_versions_len, 4, G_MAXUINT8-3)) {
-            return offset_end;
-        }
-        offset += 1;
-        next_offset = offset + supported_versions_length;
-
-        while (offset < next_offset) {
-            proto_tree_add_item(tree, hf->hf.hs_ext_quictp_supported_versions,
+    // Heuristically detect draft -18 vs draft -19.
+    if (offset_end - offset >= 4 && tvb_get_ntohs(tvb, offset) != offset_end - offset - 2) {
+        // Draft -18 and before start with a (draft) version field. For CH, this
+        // can be an arbitrary number that triggers a Version Negotiation
+        // packet. Draft -19 always begins with a vector, so assume that
+        // anything that does not have a vector length is an older draft.
+        switch (hnd_type) {
+        case SSL_HND_CLIENT_HELLO:
+            proto_tree_add_item(tree, hf->hf.hs_ext_quictp_initial_version,
                                 tvb, offset, 4, ENC_BIG_ENDIAN);
             offset += 4;
+            break;
+        case SSL_HND_ENCRYPTED_EXTENSIONS:
+            proto_tree_add_item(tree, hf->hf.hs_ext_quictp_negotiated_version,
+                                tvb, offset, 4, ENC_BIG_ENDIAN);
+            offset += 4;
+            /* QuicVersion supported_versions<4..2^8-4>;*/
+            if (!ssl_add_vector(hf, tvb, pinfo, tree, offset, offset_end, &supported_versions_length,
+                                hf->hf.hs_ext_quictp_supported_versions_len, 4, G_MAXUINT8-3)) {
+                return offset_end;
+            }
+            offset += 1;
+            next_offset = offset + supported_versions_length;
+
+            while (offset < next_offset) {
+                proto_tree_add_item(tree, hf->hf.hs_ext_quictp_supported_versions,
+                                    tvb, offset, 4, ENC_BIG_ENDIAN);
+                offset += 4;
+            }
+            break;
+        case SSL_HND_NEWSESSION_TICKET:
+            break;
+        default:
+            return offset;
         }
-        break;
-    case SSL_HND_NEWSESSION_TICKET:
-        break;
-    default:
-        return offset;
     }
 
-    /* TransportParameter parameters<22..2^16-1>; */
+    /* TransportParameter TransportParameters<0..2^16-1>; */
     if (!ssl_add_vector(hf, tvb, pinfo, tree, offset, offset_end, &quic_length,
-                        hf->hf.hs_ext_quictp_len, 22, G_MAXUINT16)) {
+                        hf->hf.hs_ext_quictp_len, 0, G_MAXUINT16)) {
         return offset_end;
     }
     offset += 2;
@@ -6737,7 +6726,7 @@ ssl_dissect_hnd_hello_ext_quic_transport_parameters(ssl_common_dissect_t *hf, tv
             case SSL_HND_QUIC_TP_IDLE_TIMEOUT:
                 proto_tree_add_item_ret_varint(parameter_tree, hf->hf.hs_ext_quictp_parameter_idle_timeout,
                                                tvb, offset, -1, ENC_VARINT_QUIC, &value, &len);
-                proto_item_append_text(parameter_tree, " %" G_GINT64_MODIFIER "u secs", value);
+                proto_item_append_text(parameter_tree, " %" G_GINT64_MODIFIER "u ms", value);
                 offset += len;
             break;
             case SSL_HND_QUIC_TP_STATELESS_RESET_TOKEN:
@@ -7533,6 +7522,7 @@ ssl_try_set_version(SslSession *session, SslDecryptSession *ssl,
 
 void
 ssl_check_record_length(ssl_common_dissect_t *hf, packet_info *pinfo,
+                        ContentType content_type,
                         guint record_length, proto_item *length_pi,
                         guint16 version, tvbuff_t *decrypted_tvb)
 {
@@ -7543,6 +7533,22 @@ ssl_check_record_length(ssl_common_dissect_t *hf, packet_info *pinfo,
     } else {
         /* RFC 5246, Section 6.2.3: TLSCiphertext.fragment length MUST NOT exceed 2^14 + 2048 */
         max_expansion = 2048;
+    }
+    /*
+     * RFC 5246 (TLS 1.2), Section 6.2.1 forbids zero-length Handshake, Alert
+     * and ChangeCipherSpec.
+     * RFC 6520 (Heartbeats) does not mention zero-length Heartbeat fragments,
+     * so assume it is permitted.
+     * RFC 6347 (DTLS 1.2) does not mention zero-length fragments either, so
+     * assume TLS 1.2 requirements.
+     */
+    if (record_length == 0 &&
+            (content_type == SSL_ID_CHG_CIPHER_SPEC ||
+             content_type == SSL_ID_ALERT ||
+             content_type == SSL_ID_HANDSHAKE)) {
+        expert_add_info_format(pinfo, length_pi, &hf->ei.record_length_invalid,
+                               "Zero-length %s fragments are not allowed",
+                               val_to_str_const(content_type, ssl_31_content_type, "unknown"));
     }
     if (record_length > TLS_MAX_RECORD_LENGTH + max_expansion) {
         expert_add_info_format(pinfo, length_pi, &hf->ei.record_length_invalid,

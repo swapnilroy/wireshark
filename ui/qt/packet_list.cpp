@@ -278,6 +278,8 @@ PacketList::PacketList(QWidget *parent) :
             this, SIGNAL(showProtocolPreferences(QString)));
     connect(&proto_prefs_menu_, SIGNAL(editProtocolPreference(preference*,pref_module*)),
             this, SIGNAL(editProtocolPreference(preference*,pref_module*)));
+
+    setSelectionMode(ExtendedSelection);
 }
 
 void PacketList::colorsChanged()
@@ -317,16 +319,6 @@ void PacketList::colorsChanged()
     QString active_style   = QString();
     QString inactive_style = QString();
 
-    bool style_inactive_selected = true;
-
-#ifdef Q_OS_WIN // && Qt version >= 4.8.6
-    if (QSysInfo::windowsVersion() < QSysInfo::WV_WINDOWS8) {
-        if (IsAppThemed() && IsThemeActive()) {
-            style_inactive_selected = false;
-        }
-    }
-#endif
-
     if (prefs.gui_active_style == COLOR_STYLE_DEFAULT) {
         // ACTIVE = Default
     } else if (prefs.gui_active_style == COLOR_STYLE_FLAT) {
@@ -354,37 +346,6 @@ void PacketList::colorsChanged()
     // INACTIVE style sheet settings
     if (prefs.gui_inactive_style == COLOR_STYLE_DEFAULT) {
         // INACTIVE = Default
-        if (style_inactive_selected) {
-            QPalette inactive_pal = palette();
-            inactive_pal.setCurrentColorGroup(QPalette::Inactive);
-            QColor border = QColor::fromRgb(ColorUtils::alphaBlend(
-                                                    inactive_pal.highlightedText(),
-                                                    inactive_pal.highlight(),
-                                                    0.25));
-            QColor shadow = QColor::fromRgb(ColorUtils::alphaBlend(
-                                                    inactive_pal.highlightedText(),
-                                                    inactive_pal.highlight(),
-                                                    0.07));
-            inactive_style = QString(
-                              "QTreeView::item:selected:first:!active {"
-                              "  border-left: 1px solid %1;"
-                              "}"
-                              "QTreeView::item:selected:last:!active {"
-                              "  border-right: 1px solid %1;"
-                              "}"
-                              "QTreeView::item:selected:!active {"
-                              "  border-top: 1px solid %1;"
-                              "  border-bottom: 1px solid %1;"
-                              "  color: %2;"
-                              // Try to approximate a subtle box shadow.
-                              "  background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1"
-                              "    stop: 0 %4, stop: 0.2 %3, stop: 0.8 %3, stop: 1 %4);"
-                              "}")
-                          .arg(border.name())
-                          .arg(inactive_pal.highlightedText().color().name())
-                          .arg(inactive_pal.highlight().color().name())
-                          .arg(shadow.name());
-        }
     } else if (prefs.gui_inactive_style == COLOR_STYLE_FLAT) {
         // INACTIVE = Flat
         QColor foreground = ColorUtils::fromColorT(prefs.gui_inactive_fg);
@@ -1074,8 +1035,8 @@ QString PacketList::getFilterFromRowAndColumn()
         Buffer buf;   /* Record data */
 
         wtap_rec_init(&rec);
-        ws_buffer_init(&buf, 1500);
-        if (!cf_read_record_r(cap_file_, fdata, &rec, &buf)) {
+        ws_buffer_init(&buf, 1514);
+        if (!cf_read_record(cap_file_, fdata, &rec, &buf)) {
             wtap_rec_cleanup(&rec);
             ws_buffer_free(&buf);
             return filter; /* error reading the record */
@@ -1650,32 +1611,39 @@ void PacketList::copySummary()
     int copy_type = ca->data().toInt(&ok);
     if (!ok) return;
 
-    QStringList col_parts;
-    int row = currentIndex().row();
-    for (int col = 0; col < packet_list_model_->columnCount(); col++) {
-        if (get_column_visible(col)) {
-            col_parts << packet_list_model_->data(packet_list_model_->index(row, col), Qt::DisplayRole).toString();
+    QString copy_text;
+    QModelIndexList selectedRows = selectionModel()->selectedRows();
+    qSort(selectedRows);
+
+    foreach(QModelIndex index, selectedRows) {
+        QStringList col_parts;
+        int row = index.row();
+        for (int col = 0; col < packet_list_model_->columnCount(); col++) {
+            if (get_column_visible(col)) {
+                col_parts << packet_list_model_->data(packet_list_model_->index(row, col), Qt::DisplayRole).toString();
+            }
+        }
+        switch (copy_type) {
+        case copy_summary_csv_:
+            copy_text += "\"";
+            copy_text += col_parts.join("\",\"");
+            copy_text += "\"";
+            copy_text += "\n";
+            break;
+        case copy_summary_yaml_:
+            copy_text += "----\n";
+            copy_text += QString("# Packet %1 from %2\n").arg(row).arg(cap_file_->filename);
+            copy_text += "- ";
+            copy_text += col_parts.join("\n- ");
+            copy_text += "\n";
+            break;
+        case copy_summary_text_:
+        default:
+            copy_text += col_parts.join("\t");
+            copy_text += "\n";
         }
     }
 
-    QString copy_text;
-    switch (copy_type) {
-    case copy_summary_csv_:
-        copy_text = "\"";
-        copy_text += col_parts.join("\",\"");
-        copy_text += "\"";
-        break;
-    case copy_summary_yaml_:
-        copy_text = "----\n";
-        copy_text += QString("# Packet %1 from %2\n").arg(row).arg(cap_file_->filename);
-        copy_text += "- ";
-        copy_text += col_parts.join("\n- ");
-        copy_text += "\n";
-        break;
-    case copy_summary_text_:
-    default:
-        copy_text = col_parts.join("\t");
-    }
     wsApp->clipboard()->setText(copy_text);
 }
 

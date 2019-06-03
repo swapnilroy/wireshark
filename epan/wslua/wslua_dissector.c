@@ -541,7 +541,7 @@ WSLUA_METHOD DissectorTable_try (lua_State *L) {
                 handled = TRUE;
             }
         } else {
-            luaL_error(L,"No such type of dissector_table");
+            error = "No such type of dissector table";
         }
 
         if (!handled) {
@@ -638,6 +638,11 @@ WSLUA_METAMETHOD DissectorTable__tostring(lua_State* L) {
         {
             int base = get_dissector_table_param(dt->name);
             g_string_append_printf(s,"%s Integer(%i):\n",dt->name,base);
+            break;
+        }
+        case FT_NONE:
+        {
+            g_string_append_printf(s,"%s only for Decode As:\n",dt->name);
             break;
         }
         default:

@@ -170,7 +170,7 @@ static gboolean               rem_vlan                  = FALSE;
 static gboolean               dup_detect                = FALSE;
 static gboolean               dup_detect_by_time        = FALSE;
 static gboolean               skip_radiotap             = FALSE;
-static gboolean               remove_all_secrets        = FALSE;
+static gboolean               discard_all_secrets       = FALSE;
 
 static int                    do_strict_time_adjustment = FALSE;
 static struct time_adjustment strict_time_adj           = {NSTIME_INIT_ZERO, 0}; /* strict time adjustment */
@@ -1018,7 +1018,7 @@ main(int argc, char *argv[])
 #define LONGOPT_SKIP_RADIOTAP_HEADER 0x8101
 #define LONGOPT_SEED                 0x8102
 #define LONGOPT_INJECT_SECRETS       0x8103
-#define LONGOPT_DISCARD_ALL_SECRETS   0x8104
+#define LONGOPT_DISCARD_ALL_SECRETS  0x8104
     static const struct option long_options[] = {
         {"novlan", no_argument, NULL, LONGOPT_NO_VLAN},
         {"skip-radiotap-header", no_argument, NULL, LONGOPT_SKIP_RADIOTAP_HEADER},
@@ -1054,6 +1054,8 @@ main(int argc, char *argv[])
     guint         max_packet_number  = 0;
     GArray       *dsb_types          = NULL;
     GPtrArray    *dsb_filenames      = NULL;
+    wtap_rec                     read_rec;
+    Buffer                       read_buf;
     const wtap_rec              *rec;
     wtap_rec                     temp_rec;
     wtap_dump_params             params = WTAP_DUMP_PARAMS_INIT;
@@ -1158,7 +1160,7 @@ main(int argc, char *argv[])
 
         case LONGOPT_DISCARD_ALL_SECRETS:
         {
-            remove_all_secrets = TRUE;
+            discard_all_secrets = TRUE;
             break;
         }
 
@@ -1485,7 +1487,7 @@ main(int argc, char *argv[])
     /*
      * Discard any secrets we read in while opening the file.
      */
-    if (remove_all_secrets) {
+    if (discard_all_secrets) {
         wtap_dump_params_discard_decryption_secrets(&params);
     }
 
@@ -1566,13 +1568,15 @@ main(int argc, char *argv[])
     }
 
     /* Read all of the packets in turn */
-    while (wtap_read(wth, &read_err, &read_err_info, &data_offset)) {
+    wtap_rec_init(&read_rec);
+    ws_buffer_init(&read_buf, 1514);
+    while (wtap_read(wth, &read_rec, &read_buf, &read_err, &read_err_info, &data_offset)) {
         if (max_packet_number <= read_count)
             break;
 
         read_count++;
 
-        rec = wtap_get_rec(wth);
+        rec = &read_rec;
 
         /* Extra actions for the first packet */
         if (read_count == 1) {
@@ -1605,7 +1609,7 @@ main(int argc, char *argv[])
         } /* first packet only handling */
 
 
-        buf = wtap_get_buf_ptr(wth);
+        buf = ws_buffer_start_ptr(&read_buf);
 
         /*
          * Not all packets have time stamps. Only process the time
@@ -1699,7 +1703,7 @@ main(int argc, char *argv[])
             /* We simply write it, perhaps after truncating it; we could
              * do other things, like modify it. */
 
-            rec = wtap_get_rec(wth);
+            rec = &read_rec;
 
             if (rec->presence_flags & WTAP_HAS_TS) {
                 /* Do we adjust timestamps to ensure strict chronological
@@ -2002,7 +2006,7 @@ main(int argc, char *argv[])
                 }
             }
 
-            if (remove_all_secrets) {
+            if (discard_all_secrets) {
                 /*
                  * Discard any secrets we've read since the last packet
                  * we wrote.
@@ -2024,6 +2028,8 @@ main(int argc, char *argv[])
         }
         count++;
     }
+    wtap_rec_cleanup(&read_rec);
+    ws_buffer_free(&read_buf);
 
     g_free(fprefix);
     g_free(fsuffix);

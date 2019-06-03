@@ -377,8 +377,23 @@ typedef struct _SslRecordInfo {
     struct _SslRecordInfo* next;
 } SslRecordInfo;
 
+/**
+ * Stored information about a part of a reassembled handshake message. A single
+ * handshake record is uniquely identified by (record_id, reassembly_id).
+ */
+typedef struct _TlsHsFragment {
+    guint   record_id;      /**< Identifies the exact record within a frame
+                                 (there can be multiple records in a frame). */
+    guint   reassembly_id;  /**< Identifies the reassembly that this fragment is part of. */
+    guint32 offset;         /**< Offset within a reassembly. */
+    guint8  type;           /**< Handshake type (first byte of the buffer). */
+    int     is_last : 1;    /**< Whether this fragment completes the message. */
+    struct _TlsHsFragment *next;
+} TlsHsFragment;
+
 typedef struct {
     SslRecordInfo *records; /**< Decrypted records within this frame. */
+    TlsHsFragment *hs_fragments;    /**< Handshake records that are part of a reassembly. */
     guint32 srcport;        /**< Used for Decode As */
     guint32 destport;
 } SslPacketInfo;
@@ -403,6 +418,10 @@ typedef struct _SslSession {
     dissector_handle_t   app_handle;
     guint32              last_nontls_frame;
     gboolean             is_session_resumed;
+
+    /* First pass only: track an in-progress handshake reassembly (>0) */
+    guint32     client_hs_reassembly_id;
+    guint32     server_hs_reassembly_id;
 } SslSession;
 
 /* RFC 5246, section 8.1 says that the master secret is always 48 bytes */
@@ -476,13 +495,6 @@ typedef struct {
     GHashTable *tls13_server_appdata;
     GHashTable *tls13_early_exporter;
     GHashTable *tls13_exporter;
-
-    /* For QUIC: maps Client Random to derived secret. */
-    GHashTable *quic_client_early;
-    GHashTable *quic_client_handshake;
-    GHashTable *quic_server_handshake;
-    GHashTable *quic_client_appdata;
-    GHashTable *quic_server_appdata;
 } ssl_master_key_map_t;
 
 gint ssl_get_keyex_alg(gint cipher);
@@ -623,6 +635,10 @@ ssl_association_remove(const char* dissector_table_name, dissector_handle_t main
 
 extern gint
 ssl_packet_from_server(SslSession *session, dissector_table_t table, packet_info *pinfo);
+
+/* Obtain information about the current TLS layer. */
+SslPacketInfo *
+tls_add_packet_info(gint proto, packet_info *pinfo, guint8 curr_layer_num_ssl);
 
 /* add to packet data a copy of the specified real data */
 extern void
@@ -999,6 +1015,7 @@ ssl_end_vector(ssl_common_dissect_t *hf, tvbuff_t *tvb, packet_info *pinfo, prot
 
 extern void
 ssl_check_record_length(ssl_common_dissect_t *hf, packet_info *pinfo,
+                        ContentType content_type,
                         guint record_length, proto_item *length_pi,
                         guint16 version, tvbuff_t *decrypted_tvb);
 
@@ -1920,7 +1937,7 @@ ssl_common_dissect_t name = {   \
     { & name .hf.hs_ext_quictp_parameter_idle_timeout,                  \
       { "idle_timeout", prefix ".quic.parameter.idle_timeout",          \
         FT_UINT64, BASE_DEC, NULL, 0x00,                                \
-        "In seconds", HFILL }                                           \
+        "In milliseconds", HFILL }                                      \
     },                                                                  \
     { & name .hf.hs_ext_quictp_parameter_stateless_reset_token,         \
       { "stateless_reset_token", prefix ".quic.parameter.stateless_reset_token",    \
@@ -2105,7 +2122,7 @@ ssl_common_dissect_t name = {   \
     }, \
     { & name .ei.record_length_invalid, \
         { prefix ".record.length.invalid", PI_PROTOCOL, PI_ERROR, \
-        "Record fragment length is too large", EXPFILL } \
+        "Record fragment length is too small or too large", EXPFILL } \
     }
 /* }}} */
 

@@ -117,7 +117,6 @@ capture_callback_remove(capture_callback_t func, gpointer user_data)
 gboolean
 capture_start(capture_options *capture_opts, capture_session *cap_session, info_data_t* cap_data, void(*update_cb)(void))
 {
-    gboolean ret;
     GString *source;
 
     cap_session->state = CAPTURE_PREPARING;
@@ -127,8 +126,8 @@ capture_start(capture_options *capture_opts, capture_session *cap_session, info_
     cf_set_tempfile_source((capture_file *)cap_session->cf, source->str);
     g_string_free(source, TRUE);
     /* try to start the capture child process */
-    ret = sync_pipe_start(capture_opts, cap_session, cap_data, update_cb);
-    if(!ret) {
+    if (!sync_pipe_start(capture_opts, cap_session, cap_data, update_cb)) {
+        /* We failed to start the capture child. */
         if(capture_opts->save_file != NULL) {
             g_free(capture_opts->save_file);
             capture_opts->save_file = NULL;
@@ -136,33 +135,38 @@ capture_start(capture_options *capture_opts, capture_session *cap_session, info_
 
         g_log(LOG_DOMAIN_CAPTURE, G_LOG_LEVEL_MESSAGE, "Capture Start failed.");
         cap_session->state = CAPTURE_STOPPED;
-    } else {
-        /* the capture child might not respond shortly after bringing it up */
-        /* (for example: it will block if no input arrives from an input capture pipe (e.g. mkfifo)) */
-
-        /* to prevent problems, bring the main GUI into "capture mode" right after a successful */
-        /* spawn/exec of the capture child, without waiting for any response from it */
-        capture_callback_invoke(capture_cb_capture_prepared, cap_session);
-
-        if (capture_opts->show_info) {
-            if (cap_data->counts.counts_hash != NULL)
-            {
-                /* Clean up any previous lists of packet counts */
-                g_hash_table_destroy(cap_data->counts.counts_hash);
-            }
-
-            cap_data->counts.counts_hash = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
-            cap_data->counts.other = 0;
-            cap_data->counts.total = 0;
-
-            cap_data->wtap = NULL;
-            cap_data->ui.counts = &cap_data->counts;
-
-            capture_info_ui_create(&cap_data->ui, cap_session);
-        }
+        return FALSE;
     }
 
-    return ret;
+    /* the capture child might not respond shortly after bringing it up */
+    /* (for example: it will block if no input arrives from an input capture pipe (e.g. mkfifo)) */
+
+    /* to prevent problems, bring the main GUI into "capture mode" right after a successful */
+    /* spawn/exec of the capture child, without waiting for any response from it */
+    capture_callback_invoke(capture_cb_capture_prepared, cap_session);
+
+    wtap_rec_init(&cap_session->rec);
+    ws_buffer_init(&cap_session->buf, 1514);
+
+    if (capture_opts->show_info) {
+        cap_session->wtap = NULL;
+
+        if (cap_data->counts.counts_hash != NULL)
+        {
+            /* Clean up any previous lists of packet counts */
+            g_hash_table_destroy(cap_data->counts.counts_hash);
+        }
+
+        cap_data->counts.counts_hash = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
+        cap_data->counts.other = 0;
+        cap_data->counts.total = 0;
+
+        cap_data->ui.counts = &cap_data->counts;
+
+        capture_info_ui_create(&cap_data->ui, cap_session);
+    }
+
+    return TRUE;
 }
 
 
@@ -411,7 +415,8 @@ capture_input_new_file(capture_session *cap_session, gchar *new_file)
         if( ((capture_file *) cap_session->cf)->state != FILE_CLOSED) {
             if(capture_opts->real_time_mode) {
                 capture_callback_invoke(capture_cb_capture_update_finished, cap_session);
-                cf_finish_tail((capture_file *)cap_session->cf, &err);
+                cf_finish_tail((capture_file *)cap_session->cf,
+                               &cap_session->rec, &cap_session->buf, &err);
                 cf_close((capture_file *)cap_session->cf);
             } else {
                 capture_callback_invoke(capture_cb_capture_fixed_finished, cap_session);
@@ -447,12 +452,12 @@ capture_input_new_file(capture_session *cap_session, gchar *new_file)
     }
 
     if(capture_opts->show_info) {
-        if (cap_session->cap_data_info->wtap != NULL) {
-            wtap_close(cap_session->cap_data_info->wtap);
+        if (cap_session->wtap != NULL) {
+            wtap_close(cap_session->wtap);
         }
 
-        cap_session->cap_data_info->wtap = wtap_open_offline(new_file, WTAP_TYPE_AUTO, &err, &err_info, FALSE);
-        if (!cap_session->cap_data_info->wtap) {
+        cap_session->wtap = wtap_open_offline(new_file, WTAP_TYPE_AUTO, &err, &err_info, FALSE);
+        if (!cap_session->wtap) {
             err_msg = g_strdup_printf(cf_open_error_message(err, err_info, FALSE, WTAP_FILE_TYPE_SUBTYPE_UNKNOWN),
                                       new_file);
             g_warning("capture_input_new_file: %d (%s)", err, err_msg);
@@ -483,7 +488,8 @@ capture_input_new_packets(capture_session *cap_session, int to_read)
 
     if(capture_opts->real_time_mode) {
         /* Read from the capture file the number of records the child told us it added. */
-        switch (cf_continue_tail((capture_file *)cap_session->cf, to_read, &err)) {
+        switch (cf_continue_tail((capture_file *)cap_session->cf, to_read,
+                                 &cap_session->rec, &cap_session->buf, &err)) {
 
             case CF_READ_OK:
             case CF_READ_ERROR:
@@ -508,7 +514,7 @@ capture_input_new_packets(capture_session *cap_session, int to_read)
     }
 
     if(capture_opts->show_info)
-        capture_info_new_packets(to_read, cap_session->cap_data_info);
+        capture_info_new_packets(to_read, cap_session->wtap, cap_session->cap_data_info);
 }
 
 
@@ -634,8 +640,11 @@ capture_input_closed(capture_session *cap_session, gchar *msg)
     if (msg != NULL)
         simple_dialog(ESD_TYPE_ERROR, ESD_BTN_OK, "%s", msg);
 
+    wtap_rec_cleanup(&cap_session->rec);
+    ws_buffer_free(&cap_session->buf);
     if(cap_session->state == CAPTURE_PREPARING) {
-        /* We didn't start a capture; note that the attempt to start it
+        /* We started the capture child, but we didn't manage to start
+           the capture process; note that the attempt to start it
            failed. */
         capture_callback_invoke(capture_cb_capture_failed, cap_session);
     } else {
@@ -646,7 +655,8 @@ capture_input_closed(capture_session *cap_session, gchar *msg)
             cf_read_status_t status;
 
             /* Read what remains of the capture file. */
-            status = cf_finish_tail((capture_file *)cap_session->cf, &err);
+            status = cf_finish_tail((capture_file *)cap_session->cf,
+                                    &cap_session->rec, &cap_session->buf, &err);
 
             /* Tell the GUI we are not doing a capture any more.
                Must be done after the cf_finish_tail(), so file lengths are
@@ -704,8 +714,8 @@ capture_input_closed(capture_session *cap_session, gchar *msg)
 
     if(capture_opts->show_info) {
         capture_info_ui_destroy(&cap_session->cap_data_info->ui);
-        if(cap_session->cap_data_info->wtap)
-            wtap_close(cap_session->cap_data_info->wtap);
+        if(cap_session->wtap)
+            wtap_close(cap_session->wtap);
     }
 
     cap_session->state = CAPTURE_STOPPED;

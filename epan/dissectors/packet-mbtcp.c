@@ -258,8 +258,6 @@ classify_mbrtu_packet(packet_info *pinfo, tvbuff_t *tvb, guint port)
 
         case READ_HOLDING_REGS:
         case READ_INPUT_REGS:
-        case WRITE_SINGLE_COIL:
-        case WRITE_SINGLE_REG:
             if (len == 8) {
                 return QUERY_PACKET;
             }
@@ -267,6 +265,11 @@ classify_mbrtu_packet(packet_info *pinfo, tvbuff_t *tvb, guint port)
                 return RESPONSE_PACKET;
             }
             break;
+
+        case WRITE_SINGLE_COIL:
+        case WRITE_SINGLE_REG:
+            /* Normal response is echo of the request */
+            return CANNOT_CLASSIFY;
 
         case WRITE_MULT_REGS:
         case WRITE_MULT_COILS:
@@ -734,11 +737,11 @@ get_mbrtu_pdu_len(packet_info *pinfo _U_, tvbuff_t *tvb,
                 case READ_DISCRETE_INPUTS:
                 case READ_HOLDING_REGS:
                 case READ_INPUT_REGS:
-                case WRITE_SINGLE_COIL:
-                case WRITE_SINGLE_REG:
                     return tvb_get_guint8(tvb, 2) + 5;  /* Reported size does not include 2 header, 1 size byte, 2 CRC16 bytes */
                     break;
-                case WRITE_MULT_REGS:  /* Response messages of FC15/16 are always 8 bytes */
+                case WRITE_SINGLE_COIL: /* Response messages of FC5/6/15/16 are always 8 bytes */
+                case WRITE_SINGLE_REG:
+                case WRITE_MULT_REGS:
                 case WRITE_MULT_COILS:
                     return 8;
                     break;
@@ -1577,7 +1580,7 @@ dissect_modbus(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data)
                 if (captured_length >= 5)
                     pkt_info->num_reg = frame_ptr->num_reg = tvb_get_ntohs(tvb, 3);
             }
-            frame_ptr->time = pinfo->abs_ts;
+            frame_ptr->req_time = pinfo->abs_ts;
 
             wmem_list_prepend(modbus_conv_data->modbus_request_frame_data, frame_ptr);
         }
@@ -1598,7 +1601,7 @@ dissect_modbus(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data)
                     pkt_info->num_reg = request_data->num_reg;
                     pkt_info->request_found = TRUE;
                     pkt_info->req_frame_num = req_frame_num;
-                    pkt_info->req_time = request_data->time;
+                    pkt_info->req_time = request_data->req_time;
                 }
                 frame = wmem_list_frame_next(frame);
             }

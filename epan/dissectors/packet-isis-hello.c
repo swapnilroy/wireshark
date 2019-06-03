@@ -14,6 +14,7 @@
 
 #include <epan/packet.h>
 #include <epan/expert.h>
+#include <epan/nlpid.h>
 #include "packet-osi.h"
 #include "packet-isis.h"
 #include "packet-isis-clv.h"
@@ -110,6 +111,7 @@ static int hf_isis_hello_reverse_metric_flag_w = -1;
 static int hf_isis_hello_reverse_metric_metric = -1;
 static int hf_isis_hello_reverse_metric_sub_length = -1;
 static int hf_isis_hello_reverse_metric_sub_data = -1;
+static int hf_isis_hello_bfd_enabled_nlpid = -1;
 static int hf_isis_hello_neighbor_extended_local_circuit_id = -1;
 static int hf_isis_hello_vlan_flags_port_id = -1;
 static int hf_isis_hello_vlan_flags_nickname = -1;
@@ -160,15 +162,17 @@ static gint ett_isis_hello_clv_mt_port_cap_vlans_appointed = -1;
 static gint ett_isis_hello_clv_trill_neighbor = -1;
 static gint ett_isis_hello_clv_checksum = -1;
 static gint ett_isis_hello_clv_reverse_metric = -1;
+static gint ett_isis_hello_clv_bfd_enabled = -1;
 static gint ett_isis_hello_clv_ipv6_glb_int_addr = -1;
 
-static expert_field ei_isis_hello_short_packet = EI_INIT;
-static expert_field ei_isis_hello_long_packet = EI_INIT;
+static expert_field ei_isis_hello_short_pdu = EI_INIT;
+static expert_field ei_isis_hello_long_pdu = EI_INIT;
+static expert_field ei_isis_hello_bad_checksum = EI_INIT;
 static expert_field ei_isis_hello_authentication = EI_INIT;
 static expert_field ei_isis_hello_subtlv = EI_INIT;
+static expert_field ei_isis_hello_short_clv = EI_INIT;
 static expert_field ei_isis_hello_clv_mt = EI_INIT;
 static expert_field ei_isis_hello_clv_unknown = EI_INIT;
-static expert_field ei_isis_hello_checksum = EI_INIT;
 
 static const value_string isis_hello_circuit_type_vals[] = {
     { ISIS_HELLO_TYPE_RESERVED,    "Reserved 0 (discard PDU)"},
@@ -188,7 +192,7 @@ dissect_hello_mt_port_cap_spb_mcid_clv(tvbuff_t *tvb, packet_info* pinfo,
     proto_tree *subtree;
 
     if (sublen != SUBLEN) {
-        proto_tree_add_expert_format(tree, pinfo, &ei_isis_hello_short_packet, tvb, offset, -1,
+        proto_tree_add_expert_format(tree, pinfo, &ei_isis_hello_short_clv, tvb, offset, -1,
                                      "Short SPB MCID TLV (%d vs %d)", sublen, SUBLEN);
         return;
     }
@@ -213,7 +217,7 @@ dissect_hello_mt_port_cap_spb_digest_clv(tvbuff_t *tvb, packet_info* pinfo,
     const int DIGEST_LEN = 32;
     const int SUBLEN     = 1 + DIGEST_LEN;
     if (sublen != SUBLEN) {
-        proto_tree_add_expert_format(tree, pinfo, &ei_isis_hello_short_packet, tvb, offset, -1,
+        proto_tree_add_expert_format(tree, pinfo, &ei_isis_hello_short_clv, tvb, offset, -1,
                               "Short SPB Digest TLV (%d vs %d)", sublen, SUBLEN);
         return;
     }
@@ -246,7 +250,7 @@ dissect_hello_mt_port_cap_spb_bvid_tuples_clv(tvbuff_t *tvb, packet_info* pinfo,
 
     while (sublen > 0) {
         if (sublen < 6) {
-            proto_tree_add_expert_format(tree, pinfo, &ei_isis_hello_short_packet, tvb, offset, -1,
+            proto_tree_add_expert_format(tree, pinfo, &ei_isis_hello_short_clv, tvb, offset, -1,
                                   "Short SPB BVID header entry (%d vs %d)", sublen, 6);
             return;
         }
@@ -423,7 +427,7 @@ dissect_hello_mt_port_cap_clv(tvbuff_t *tvb, packet_info* pinfo,
             length -= 2;
             offset += 2;
             if (subtlvlen > length) {
-                proto_tree_add_expert_format(tree, pinfo, &ei_isis_hello_short_packet, tvb, offset, -1,
+                proto_tree_add_expert_format(tree, pinfo, &ei_isis_hello_short_clv, tvb, offset, -1,
                                       "Short type %d TLV (%d vs %d)", subtype, subtlvlen, length);
                 return;
             }
@@ -611,7 +615,7 @@ static void
 dissect_hello_ip_int_addr_clv(tvbuff_t *tvb, packet_info* pinfo,
     proto_tree *tree, int offset, int id_length _U_, int length)
 {
-    isis_dissect_ip_int_clv(tree, pinfo, tvb, &ei_isis_hello_short_packet,
+    isis_dissect_ip_int_clv(tree, pinfo, tvb, &ei_isis_hello_short_clv,
         offset, length, hf_isis_hello_clv_ipv4_int_addr );
 }
 
@@ -636,7 +640,7 @@ static void
 dissect_hello_ipv6_int_addr_clv(tvbuff_t *tvb, packet_info* pinfo,
     proto_tree *tree, int offset, int id_length _U_, int length)
 {
-    isis_dissect_ipv6_int_clv(tree, pinfo, tvb, &ei_isis_hello_short_packet,
+    isis_dissect_ipv6_int_clv(tree, pinfo, tvb, &ei_isis_hello_short_clv,
         offset, length, hf_isis_hello_clv_ipv6_int_addr );
 }
 
@@ -758,6 +762,38 @@ dissect_hello_reverse_metric_clv(tvbuff_t *tvb, packet_info* pinfo _U_,
 }
 
 /*
+ * Name: dissect_hello_bfd_enabled_clv
+ *
+ * Description:
+ *    Decode for a hello packets BFD enabled clv.
+ *
+ * Input:
+ *    tvbuff_t * : tvbuffer for packet data
+ *    proto_tree * : proto tree to build on (may be null)
+ *    int : current offset into packet data
+ *    int : length of IDs in packet.
+ *    int : length of this clv
+ *
+ * Output:
+ *    void, will modify proto_tree if not null.
+ */
+static void
+dissect_hello_bfd_enabled_clv(tvbuff_t *tvb, packet_info* pinfo _U_,
+        proto_tree *tree, int offset, int id_length _U_, int length) {
+
+    while (length >= 3) {
+        /* mtid */
+        proto_tree_add_item(tree, hf_isis_hello_mtid, tvb, offset, 2, ENC_BIG_ENDIAN);
+        length -= 2;
+        offset += 2;
+        /* nlpid */
+        proto_tree_add_item(tree, hf_isis_hello_bfd_enabled_nlpid, tvb, offset, 1, ENC_NA);
+        length -= 1;
+        offset += 1;
+    };
+}
+
+/*
  * Name: dissect_hello_checksum_clv()
  *
  * Description:
@@ -780,7 +816,7 @@ dissect_hello_checksum_clv(tvbuff_t *tvb, packet_info* pinfo,
     guint16 pdu_length,checksum, cacl_checksum=0;
 
     if ( length != 2 ) {
-        proto_tree_add_expert_format(tree, pinfo, &ei_isis_hello_short_packet, tvb, offset, length,
+        proto_tree_add_expert_format(tree, pinfo, &ei_isis_hello_short_clv, tvb, offset, length,
                                 "incorrect checksum length (%u), should be (2)", length );
         return;
     }
@@ -788,22 +824,21 @@ dissect_hello_checksum_clv(tvbuff_t *tvb, packet_info* pinfo,
     checksum = tvb_get_ntohs(tvb, offset);
 
     /* the check_and_get_checksum() function needs to know how big
-        * the packet is. we can either pass through the pdu-len through several layers
-        * of dissectors and wrappers or extract the PDU length field from the PDU specific header
-        * which is offseted 17 bytes in IIHs (relative to the beginning of the IS-IS packet) */
+     * the packet is. we can either pass through the pdu-len through several layers
+     * of dissectors and wrappers or extract the PDU length field from the PDU specific header
+     * which is offseted 17 bytes in IIHs (relative to the beginning of the IS-IS packet) */
     pdu_length = tvb_get_ntohs(tvb, 17);
 
     if (checksum == 0) {
         /* No checksum present */
-        proto_tree_add_checksum(tree, tvb, offset, hf_isis_hello_checksum, hf_isis_hello_checksum_status, &ei_isis_hello_checksum, pinfo, 0, ENC_BIG_ENDIAN, PROTO_CHECKSUM_NOT_PRESENT);
+        proto_tree_add_checksum(tree, tvb, offset, hf_isis_hello_checksum, hf_isis_hello_checksum_status, &ei_isis_hello_bad_checksum, pinfo, 0, ENC_BIG_ENDIAN, PROTO_CHECKSUM_NOT_PRESENT);
     } else {
         if (osi_check_and_get_checksum(tvb, 0, pdu_length, offset, &cacl_checksum)) {
             /* Successfully processed checksum, verify it */
-            proto_tree_add_checksum(tree, tvb, offset, hf_isis_hello_checksum, hf_isis_hello_checksum_status, &ei_isis_hello_checksum, pinfo, cacl_checksum, ENC_BIG_ENDIAN, PROTO_CHECKSUM_VERIFY);
+            proto_tree_add_checksum(tree, tvb, offset, hf_isis_hello_checksum, hf_isis_hello_checksum_status, &ei_isis_hello_bad_checksum, pinfo, cacl_checksum, ENC_BIG_ENDIAN, PROTO_CHECKSUM_VERIFY);
         } else {
-            proto_tree_add_checksum(tree, tvb, offset, hf_isis_hello_checksum, hf_isis_hello_checksum_status, &ei_isis_hello_checksum, pinfo, 0, ENC_BIG_ENDIAN, PROTO_CHECKSUM_NO_FLAGS);
-            proto_tree_add_expert_format(tree, pinfo, &ei_isis_hello_long_packet, tvb, offset, -1,
-                    "Packet length %d went beyond packet", tvb_captured_length(tvb) );
+            /* We didn't capture the entire packet, so we can't verify it */
+            proto_tree_add_checksum(tree, tvb, offset, hf_isis_hello_checksum, hf_isis_hello_checksum_status, &ei_isis_hello_bad_checksum, pinfo, 0, ENC_BIG_ENDIAN, PROTO_CHECKSUM_NO_FLAGS);
         }
     }
 }
@@ -831,7 +866,7 @@ static void
 dissect_hello_area_address_clv(tvbuff_t *tvb, packet_info* pinfo _U_,
     proto_tree *tree, int offset, int id_length _U_, int length)
 {
-    isis_dissect_area_address_clv(tree, pinfo, tvb, &ei_isis_hello_short_packet, hf_isis_hello_area_address, offset, length);
+    isis_dissect_area_address_clv(tree, pinfo, tvb, &ei_isis_hello_short_clv, hf_isis_hello_area_address, offset, length);
 }
 
 /*
@@ -855,7 +890,7 @@ static void
 dissect_hello_instance_identifier_clv(tvbuff_t *tvb, packet_info* pinfo _U_,
     proto_tree *tree, int offset, int id_length _U_, int length)
 {
-    isis_dissect_instance_identifier_clv(tree, pinfo, tvb, &ei_isis_hello_short_packet, hf_isis_hello_instance_identifier, hf_isis_hello_supported_itid, offset, length);
+    isis_dissect_instance_identifier_clv(tree, pinfo, tvb, &ei_isis_hello_short_clv, hf_isis_hello_instance_identifier, hf_isis_hello_supported_itid, offset, length);
 }
 
 static const value_string adj_state_vals[] = {
@@ -890,7 +925,7 @@ dissect_hello_ptp_adj_clv(tvbuff_t *tvb, packet_info* pinfo,
         proto_tree_add_item(tree, hf_isis_hello_neighbor_extended_local_circuit_id, tvb, offset+5+id_length, 4, ENC_BIG_ENDIAN);
     break;
     default:
-        proto_tree_add_expert_format(tree, pinfo, &ei_isis_hello_short_packet, tvb, offset, -1,
+        proto_tree_add_expert_format(tree, pinfo, &ei_isis_hello_short_clv, tvb, offset, -1,
                    "malformed TLV (%d vs 1,5,11,15)", length );
     }
 }
@@ -918,7 +953,7 @@ dissect_hello_is_neighbors_clv(tvbuff_t *tvb, packet_info* pinfo, proto_tree *tr
 {
     while ( length > 0 ) {
         if (length<6) {
-            proto_tree_add_expert_format(tree, pinfo, &ei_isis_hello_short_packet, tvb, offset, -1,
+            proto_tree_add_expert_format(tree, pinfo, &ei_isis_hello_short_clv, tvb, offset, -1,
                 "short is neighbor (%d vs 6)", length );
             return;
         }
@@ -977,7 +1012,7 @@ static void
 dissect_hello_ipv6_glb_int_addr_clv(tvbuff_t *tvb, packet_info* pinfo,
     proto_tree *tree, int offset, int id_length _U_, int length)
 {
-    isis_dissect_ipv6_int_clv(tree, pinfo, tvb, &ei_isis_hello_short_packet,
+    isis_dissect_ipv6_int_clv(tree, pinfo, tvb, &ei_isis_hello_short_clv,
         offset, length, hf_isis_hello_clv_ipv6_glb_int_addr );
 }
 static const isis_clv_handle_t clv_l1_hello_opts[] = {
@@ -1078,6 +1113,12 @@ static const isis_clv_handle_t clv_l1_hello_opts[] = {
         dissect_hello_reverse_metric_clv
     },
     {
+        ISIS_CLV_BFD_ENABLED,
+        "BFD Enabled",
+        &ett_isis_hello_clv_bfd_enabled,
+        dissect_hello_bfd_enabled_clv
+    },
+    {
         0,
         "",
         NULL,
@@ -1163,6 +1204,12 @@ static const isis_clv_handle_t clv_l2_hello_opts[] = {
         "IPv6 Global Interface Address",
         &ett_isis_hello_clv_ipv6_glb_int_addr,
         dissect_hello_ipv6_glb_int_addr_clv
+    },
+    {
+        ISIS_CLV_BFD_ENABLED,
+        "BFD Enabled",
+        &ett_isis_hello_clv_bfd_enabled,
+        dissect_hello_bfd_enabled_clv
     },
     {
         0,
@@ -1258,6 +1305,12 @@ static const isis_clv_handle_t clv_ptp_hello_opts[] = {
         dissect_hello_ipv6_glb_int_addr_clv
     },
     {
+        ISIS_CLV_BFD_ENABLED,
+        "BFD Enabled",
+        &ett_isis_hello_clv_bfd_enabled,
+        dissect_hello_bfd_enabled_clv
+    },
+    {
         0,
         "",
         NULL,
@@ -1279,7 +1332,8 @@ dissect_isis_hello(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, int offs
 {
     proto_item    *ti;
     proto_tree    *hello_tree;
-    int                pdu_length;
+    guint16        pdu_length;
+    gboolean       pdu_length_too_short = FALSE;
 
     col_set_str(pinfo->cinfo, COL_PROTOCOL, "ISIS HELLO");
 
@@ -1300,8 +1354,14 @@ dissect_isis_hello(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, int offs
     offset += 2;
 
     pdu_length = tvb_get_ntohs(tvb, offset);
-    proto_tree_add_uint(hello_tree, hf_isis_hello_pdu_length, tvb,
-                        offset, 2, pdu_length);
+    ti = proto_tree_add_uint(hello_tree, hf_isis_hello_pdu_length, tvb,
+                             offset, 2, pdu_length);
+    if (pdu_length < header_length) {
+        expert_add_info(pinfo, ti, &ei_isis_hello_short_pdu);
+        pdu_length_too_short = TRUE;
+    } else if (pdu_length > tvb_reported_length(tvb) + header_length) {
+        expert_add_info(pinfo, ti, &ei_isis_hello_long_pdu);
+    }
     offset += 2;
 
     if (opts == clv_ptp_hello_opts) {
@@ -1317,10 +1377,7 @@ dissect_isis_hello(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, int offs
         offset += id_length + 1;
     }
 
-    pdu_length -= header_length;
-    if (pdu_length < 0) {
-        expert_add_info_format(pinfo, ti, &ei_isis_hello_long_packet,
-            "Packet header length %d went beyond packet", header_length );
+    if (pdu_length_too_short) {
         return;
     }
     /*
@@ -1328,7 +1385,8 @@ dissect_isis_hello(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, int offs
      * our list of valid ones!
      */
     isis_dissect_clvs(tvb, pinfo, hello_tree, offset,
-            opts, &ei_isis_hello_short_packet, pdu_length, id_length,
+            opts, &ei_isis_hello_short_clv, pdu_length - header_length,
+            id_length,
             ett_isis_hello_clv_unknown, hf_isis_hello_clv_type, hf_isis_hello_clv_length, ei_isis_hello_clv_unknown);
 }
 
@@ -1527,6 +1585,7 @@ proto_register_isis_hello(void)
       { &hf_isis_hello_reverse_metric_metric, { "Metric", "isis.hello.reverse_metric.metric", FT_UINT24, BASE_DEC, NULL, 0x0, NULL, HFILL }},
       { &hf_isis_hello_reverse_metric_sub_length, { "Sub-TLV length", "isis.hello.reverse_metric.sub_length", FT_UINT8, BASE_DEC, NULL, 0x0, NULL, HFILL }},
       { &hf_isis_hello_reverse_metric_sub_data, { "Sub-TLV data", "isis.hello.reverse_metric.sub_data", FT_BYTES, BASE_NONE, NULL, 0x0, NULL, HFILL }},
+      { &hf_isis_hello_bfd_enabled_nlpid, { "NLPID", "isis.hello.bfd_enabled.nlpid", FT_UINT8, BASE_HEX, VALS(nlpid_vals), 0x0, NULL, HFILL }},
 
       /* rfc6119 */
       { &hf_isis_hello_clv_ipv6_glb_int_addr,
@@ -1562,17 +1621,19 @@ proto_register_isis_hello(void)
         &ett_isis_hello_clv_trill_neighbor,
         &ett_isis_hello_clv_checksum,
         &ett_isis_hello_clv_reverse_metric,
+        &ett_isis_hello_clv_bfd_enabled,
         &ett_isis_hello_clv_ipv6_glb_int_addr /* CLV 233, rfc6119 */
     };
 
     static ei_register_info ei[] = {
-        { &ei_isis_hello_short_packet, { "isis.hello.short_packet", PI_MALFORMED, PI_ERROR, "Short packet", EXPFILL }},
-        { &ei_isis_hello_long_packet, { "isis.hello.long_packet", PI_MALFORMED, PI_ERROR, "Long packet", EXPFILL }},
+        { &ei_isis_hello_short_pdu, { "isis.lsp.hello_pdu", PI_MALFORMED, PI_ERROR, "PDU length less than header length", EXPFILL }},
+        { &ei_isis_hello_long_pdu, { "isis.lsp.hello_pdu", PI_MALFORMED, PI_ERROR, "PDU length greater than packet length", EXPFILL }},
+        { &ei_isis_hello_bad_checksum, { "isis.hello.bad_checksum", PI_CHECKSUM, PI_ERROR, "Bad checksum", EXPFILL }},
         { &ei_isis_hello_subtlv, { "isis.hello.subtlv.unknown", PI_PROTOCOL, PI_WARN, "Unknown Sub-TLV", EXPFILL }},
         { &ei_isis_hello_authentication, { "isis.hello.authentication.unknown", PI_PROTOCOL, PI_WARN, "Unknown authentication type", EXPFILL }},
+        { &ei_isis_hello_short_clv, { "isis.hello.short_clv", PI_MALFORMED, PI_ERROR, "Short CLV", EXPFILL }},
         { &ei_isis_hello_clv_mt, { "isis.hello.clv_mt.malformed", PI_MALFORMED, PI_ERROR, "malformed MT-ID", EXPFILL }},
         { &ei_isis_hello_clv_unknown, { "isis.hello.clv.unknown", PI_UNDECODED, PI_NOTE, "Unknown option", EXPFILL }},
-        { &ei_isis_hello_checksum, { "isis.hello.bad_checksum", PI_CHECKSUM, PI_ERROR, "Bad checksum", EXPFILL }},
     };
 
     expert_module_t* expert_isis_hello;
